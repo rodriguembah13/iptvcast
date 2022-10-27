@@ -1,0 +1,55 @@
+dt:
+  columns:
+    name: Nom complet
+    statusshort: Status
+    teamawayname: Equipe exterieur
+    teamhomename: Equipe domicile
+    date: Date
+    goalaway: But visiteur
+    goalhome: But domicilier
+    winnername: L'equipe vainqueur
+    winnercomment: Commentaire
+    winnerdraw: Nul
+    advice: Advice
+    percenthome: Pourcentage domicile
+    percentdraw: Pourcentage null
+    percentaway: Pourcentage exterieur
+    underover: Under over
+    teamawaywinner: L'equipe exterieur a gagné?
+    teamhomewinner: L'equipe domicile a gagné?
+    referee: Abitre
+    numero_sms: SMS number
+    numero_watsapp: Whatsapp number
+    profession_mere: Mother's profession
+    profession_pere: Fathers profession
+    montant: Amount
+    createdBy: Created by
+    isEnabled: stautut
+    libelle: Wording
+    date_validation: Validation date
+    data_validite: Validity date
+    phone: Téléphone
+    matricule: Registration number
+    email: Adresse email
+    username: Nom utilisateur
+    active: Active
+    enfant: Children
+    salaire_fixe: Fixed salary
+    salaire_heure: Salary per hour
+    listphone: Téléphones
+    statuselapsed: Temps de jeu
+    scorepenaltyhome: 'But penalitie domicile'
+    scorepenaltyaway: 'But penalitie visiteur'
+    leagueseason: 'Saison'
+    leagueround: 'Round'
+    leaguename: 'League'
+    scorefulltimehome: 'Score final domicile'
+    scorefulltimeaway: 'Score final visiteur'
+    scorehalftimehome: 'Score mi-temps domicile'
+    scorehalftimeaway: 'Score mi-temps visiteur'
+    scoreextratimeaway: 'Score extra-time domicile'
+    scoreextratimehome: 'Score extra-time domicile'
+button:
+  show: 'Detail'
+  prediction: 'Prediction'
+  cote: 'Cotes'

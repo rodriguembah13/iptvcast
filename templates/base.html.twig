@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>{% block title %}Scraping!{% endblock %}</title>
+    <link rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
+    {# Run `composer require symfony/webpack-encore-bundle` to start using Symfony UX #}
+    {% block stylesheets %}
+        <link href="{{ asset('assets/vendors/core/core.css') }}" rel="stylesheet">
+        <link href="{{ asset('assets/vendors/prismjs/themes/prism.css') }}" rel="stylesheet">
+        <link href="{{ asset('assets/vendors/flag-icon-css/css/flag-icon.min.css') }}" rel="stylesheet">
+        <link href="{{ asset('assets/vendors/select2/select2.min.css') }}" rel="stylesheet">
+        <link href="{{ asset('assets/fonts/feather-font/css/iconfont.css') }}" rel="stylesheet">
+        <link href="{{ asset('assets/vendors/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
+        <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
+        <link  rel="stylesheet" href="{{ asset('assets/css/stats.css') }}">
+        <link rel="stylesheet"
+              href="{{ asset('assets/datatable/DataTables-1.10.24/css/dataTables.bootstrap4.min.css') }}">
+    {% endblock %}
+
+
+</head>
+<body  class="navbar-dark">
+<div class="main-wrapper">
+    {% include '_partials/_hearder.html.twig' %}
+    <div class="page-wrapper">
+        <div class="page-content">
+
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+            {% endfor %}
+            {% block body %}
+
+            {% endblock %}
+            <!-- End of Main Content -->
+        </div>
+        {% include '_partials/_footer.html.twig' %}
+    </div>
+</div>
+{% block javascripts %}
+    <script src="{{ asset('assets/vendors/core/core.js') }}"></script>
+    <script src="{{ asset('assets/vendors/prismjs/prism.js') }}"></script>
+    <script src="{{ asset('assets/vendors/clipboard/clipboard.min.js') }}"></script>
+    <script src="{{ asset('assets/vendors/feather-icons/feather.min.js') }}"></script>
+    <script src="{{ asset('assets/vendors/select2/select2.min.js') }}"></script>
+    <script src="{{ asset('assets/js/template.js') }}"></script>
+    <script src="{{ asset('bundles/datatables/js/datatables.js') }}"></script>
+    <script src="{{ asset('assets/datatable/datatables.min.js') }}"></script>
+    <script src="{{ asset('assets/datatable/DataTables-1.10.24/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script>
+        $(document).ready(function () {
+            $(".selectpicker").select2(
+            );
+            //Initialize Select2 Elements
+            $('.select2').select2()
+            if ($(".js-example-basic-single").length) {
+                $(".js-example-basic-single").select2();
+            }
+            if ($(".js-example-basic-multiple").length) {
+                $(".js-example-basic-multiple").select2();
+            }
+            //Initialize Select2 Elements
+            $('.select2bs4').select2({
+                theme: 'bootstrap4'
+            })
+        });
+    </script>
+{% endblock %}
+</body>
+</html>

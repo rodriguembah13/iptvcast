@@ -1,0 +1,24 @@
+# config/packages/prod/doctrine.yaml
+framework:
+  cache:
+    pools:
+      doctrine.result_cache_pool:
+        adapter: cache.app
+      doctrine.system_cache_pool:
+        adapter: cache.system
+
+doctrine:
+  orm:
+    # ...
+    metadata_cache_driver:
+      type: pool
+      pool: doctrine.system_cache_pool
+    query_cache_driver:
+      type: pool
+      pool: doctrine.system_cache_pool
+    result_cache_driver:
+      type: pool
+      pool: doctrine.result_cache_pool
+
+    # in addition to Symfony Cache pools, you can also use the
+    # 'type: service' option to use any service as the cache

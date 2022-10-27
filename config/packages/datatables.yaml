@@ -1,0 +1,32 @@
+datatables:
+
+    # Load i18n data from DataTables CDN or locally
+    language_from_cdn:    false
+
+    # Default HTTP method to be used for callbacks
+    method:               POST # One of "GET"; "POST"
+
+    # Default options to load into DataTables
+    options:
+        searching:        true
+
+    # Where to persist the current table state automatically
+    persist_state:        fragment # One of "none"; "query"; "fragment"; "local"; "session"
+
+    # Default service used to render templates, built-in TwigRenderer uses global Twig environment
+    renderer:             Omines\DataTablesBundle\Twig\TwigRenderer
+
+    # Default template to be used for DataTables HTML
+    template:             '@DataTables/datatable_html.html.twig'
+
+    # Default parameters to be passed to the template
+    template_parameters:
+
+        # Default class attribute to apply to the root table elements
+        className:        'table'
+
+        # If and where to enable the DataTables Filter module
+        columnFilter:     null # One of "thead"; "tfoot"; "both"; null
+
+    # Default translation domain to be used
+    translation_domain:   messages

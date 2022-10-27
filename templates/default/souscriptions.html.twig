@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Souscriptions
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h4>Souscriptions</h4>
+                <div class="row  float-end">
+                    <div class="btn-group-sm">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="souscriptions">{{ 'loading'|trans({}, 'messages') }}</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#souscriptions').initDataTables({{ datatable_settings(datatable) }});
+        });
+
+    </script>
+{% endblock %}

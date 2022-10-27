@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+Bouquets
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h4>Bouquets</h4>
+                <div class="row  float-end">
+                    <div class="btn-group-sm">
+                      {#  <a class="btn btn-primary" href="{{ path('bouquetchanel_new') }}"><i class="me-2 icon-md" data-feather="plus"></i></a>#}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="bouquets">{{ 'loading'|trans({}, 'messages') }}</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#bouquets').initDataTables({{ datatable_settings(datatable) }});
+        });
+
+    </script>
+{% endblock %}

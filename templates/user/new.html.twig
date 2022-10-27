@@ -1,0 +1,49 @@
+{% extends 'basestats.html.twig' %}
+{% block sub_tilte %}
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box page-title-box-alt">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Agency</a></li>
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Utilisateurs</a></li>
+                    </ol>
+                </div>
+                <h4 class="page-title">Ajouter un utilisateur</h4>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+{% endblock %}
+{% block body %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Ajouter un utilisateur</h5>
+        </div>
+        <div class="card-body">
+            {{ form_start(form) }}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    {{ form_row(form.name) }}
+                    {{ form_row(form.username) }}
+                    {{ form_row(form.email) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.phone) }}
+                    {{ form_row(form.password) }}
+                    {{ form_row(form.roles) }}
+                </div>
+            </div>
+            <a href="{{ path('user_index') }}" class="btn btn-warning btn-sm">{{ button_label|default('Annuler') }}</a>
+            <button class="btn btn-sm btn-primary">{{ button_label|default('Enregistrer') }}</button>
+            {{ form_end(form) }}
+        </div>
+    </div></div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+{% endblock %}
+

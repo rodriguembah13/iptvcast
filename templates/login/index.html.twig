@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>TV+|Connexion</title>
+
+    <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
+
+</head>
+
+<body class="loading authentication-bg authentication-bg-pattern">
+
+<div class="account-pages my-5">
+    <div class="container">
+
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6 col-xl-6">
+                <div class="text-center">
+                    <a href="#">
+                        <img src="{{ asset('assets/img/logo.png') }}" alt="" height="80" class="mx-auto">
+                    </a>
+                    <p class="text-muted mt-2 mb-4">Management plateforme</p>
+
+                </div>
+                <div class="card">
+                    <div class="card-body p-4">
+
+                        <div class="text-center mb-4">
+                            <h4 class="text-uppercase mt-0">Se connecter</h4>
+                        </div>
+                                {% if error %}
+                                    <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData,'security') }}</div>
+                                {% endif %}
+                                <form class="user" action="{{ path('login') }}" method="post">
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">Login</label>
+                                        <input type="text" class="form-control"
+                                               id="username" name="_username" value="{{ last_username }}" aria-describedby="emailHelp"
+                                               placeholder="Enter login">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="username" class="form-label">Mot de passe</label>
+                                        <input type="password" name="_password" class="form-control"
+                                               id="exampleInputPassword" placeholder="Password">
+                                    </div>
+                                    <input type="hidden" name="_target_path" class="form-control form-control-user"
+                                           id="exampleInputPassword" value="/">
+                                    <input type="hidden" name="_csrf_token" class="form-control form-control-user"
+                                           id="exampleInputPassword" value="{{ csrf_token('authenticate') }}">
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="custom-control-input" id="customCheck">
+                                            <label class="custom-control-label" for="customCheck">Se souvienir de moi</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 text-center d-grid">
+                                    <button type="submit" class="btn btn-primary btn-user btn-block">
+                                        Connexion
+                                    </button>
+                                    </div>
+                                </form>
+                        <hr>
+                       {# <div class="mb-3 text-center d-grid">
+                            <a class="btn btn-google" href="{{ path('connect_google') }}"> <i class="fab fa-google fa-fw"></i>Se connecter avec Google </a>
+                        </div>
+                        <div class="mb-3 text-center d-grid">
+                            <a class="btn btn-facebook" href="{{ path('connect_facebook_start') }}"> <i class="fab fa-facebook-f fa-fw"></i>Se connecter avec Facebook </a>
+                        </div>#}
+                    </div> <!-- end card-body -->
+                </div>
+             {#   <div class="row mt-3">
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Vous avez pas encore de compte ?  <a href="{{ path('register') }}" class="text-dark ms-1"><b>Enregistrer vous</b></a></p>
+                    </div> <!-- end col -->
+                </div>#}
+                <!-- end card -->
+
+            </div> <!-- end col -->
+        </div>
+        <!-- end row -->
+    </div>
+    <!-- end container -->
+</div>
+<!-- end page -->
+
+<script src="{{ asset('assets/js/vendor.min.js') }}"></script>
+<script src="{{ asset('assets/js/app.js') }}"></script>
+
+</body>
+
+</html>

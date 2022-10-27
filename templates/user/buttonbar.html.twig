@@ -1,0 +1,6 @@
+<div class="btn-group btn-group-sm">
+    <a class="btn btn-success btn-sm" href="{{ path('user_edit', {'id': value }) }}"><i class="fa fa-edit"></i></a>
+    <a class="btn btn-dark btn-sm" href="{{ path('user_pronosticuser', {'id': value }) }}"><i class="fa fa-eye"></i></a>
+    <a class="btn btn-danger btn-sm" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick='getItem_id({{ value }})'><i class="fa fa-trash"></i></a>
+    <a class="btn btn-primary btn-sm" href="{{ path('user_privilege', {'id': value }) }}"><i class="fa fa-users-cog"></i></a>
+</div>

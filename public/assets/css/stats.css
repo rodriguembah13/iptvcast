@@ -1,0 +1,361 @@
+
+.text-rotation{
+    text-align: center;
+    vertical-align: middle;
+    width: 50px;
+}
+.text-rotation >span{
+    position: absolute;
+    bottom: 130px;
+    left: -30px;
+    transform: translate(25px,51px) rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+}
+.scol{
+    display: inline-block;
+    width: 30%;
+}
+.scolfixture{
+    display: inline-block;
+    width: 35%;
+}
+.hostteamgoalsright {
+    display: inline-block;
+    padding: 8px 0px;
+    width: 10%;
+    margin: 0px 1px 0px 2px;
+    text-align: center;
+    background-color: rgb(192, 192, 192);
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+    text-shadow: rgb(120, 120, 120) 1px 1px;
+}
+.hostteamgoalswin {
+    background-color: rgb(192, 192, 192);
+    text-shadow: rgb(120, 120, 120) 1px 1px;
+}
+/******begin accordion********/
+details div {
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
+    border-bottom: 2px solid #000;
+    padding: 1.5em;
+}
+
+details div > * + * {
+    margin-top: 1.5em;
+}
+
+details + details {
+    margin-top: .5rem;
+}
+
+summary {
+    list-style: none;
+}
+
+summary::-webkit-details-marker {
+    display: none;
+}
+
+summary {
+    border: 2px solid #000;
+    padding: .75em 1em;
+    cursor: pointer;
+    position: relative;
+    padding-left: calc(1.75rem + .75rem + .75rem);
+}
+
+summary:before {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: .75rem;
+    content: "↓";
+    width: 1.75rem;
+    height: 1.75rem;
+    background-color: #000;
+    color: #FFF;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+details[open] summary {
+    background-color: #eee;
+}
+
+details[open] summary:before {
+    content: "↑";
+}
+
+summary:hover {
+    background-color: #eee;
+}
+
+a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 1px 0 0;
+}
+
+a:hover {
+    box-shadow: 0 3px 0 0;
+}
+
+code {
+    font-family: monospace;
+    font-weight: 600;
+}
+/** end accordion**/
+.horizontal-menu .bottom-navbar .page-navigation {
+    justify-content: flex-start !important;
+}
+    @media (min-width: 1200px) {
+        .container-xl, .container-lg, .container-md, .container-sm, .container, .page-wrapper .page-content {
+            max-width: 1280px !important;
+        }
+    }
+.bto-sb-event-odds-cell{
+    border: 2px solid #b9b9b9;
+    font-size: 12px;
+    font-weight: bold;
+    color: #111111;
+    text-align: center;
+    background-color: #ffffff;
+}
+
+
+.buttons-container {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.buttons-container .label-container {
+    display: inline-block;
+    -webkit-box-flex: 1;
+    -moz-box-flex: 1;
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.year-dropdown {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    font-size: inherit;
+    font-weight: inherit;
+    font-family: inherit;
+    padding: 5px 20px;
+}
+
+.prev-button,
+.next-button {
+    background: transparent;
+    border: none;
+    padding: 10px;
+}
+
+.week {
+    margin: 10px 0;
+}
+
+.week.highlight {
+    border-radius: 5px;
+}
+
+.weeks-wrapper.header {
+    border-bottom: 1px solid #eee;
+}
+
+.week .day.header {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 110%;
+}
+
+.day span {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.day.today span {
+    position: relative;
+    display: inline-block;
+    font-size: 100%;
+}
+
+/* weekend */
+.week:not(.start-on-monday) .day:first-child,
+.week:not(.start-on-monday) .day:last-child {
+    color: orange;
+}
+
+/* sunday */
+.week:not(.start-on-monday) .day:first-child {
+    color: red;
+}
+
+/* start on monday - weekend */
+.week.start-on-monday .day:nth-child(6),
+.week.start-on-monday .day:last-child {
+    color: orange;
+}
+
+/* start on monday - sunday */
+.week.start-on-monday .day:last-child {
+    color: red;
+}
+
+.day.today span::after {
+    content: "";
+    position: absolute;
+    bottom: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom: 2px solid orange;
+    width: 10px;
+    height: 1px;
+}
+
+.day.sunday span {
+    color: #ff8a80;
+}
+
+.week .day.highlight span {
+    color: #2196f3;
+}
+
+.week .day.selected span {
+    background: #1565c0;
+    color: white;
+}
+
+.week .day[disabled="disabled"] span {
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.months-wrapper .month span {
+    display: inline-block;
+    padding: 10px;
+    text-transform: capitalize;
+    margin-bottom: 10px;
+}
+
+.special-buttons {
+    text-align: center;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.today-button {
+    margin: 0 auto;
+    background: transparent;
+    border: none;
+    padding: 5px;
+}
+
+.calendar{
+    background-color: #FFFFFF;
+}
+.calendar-box {
+font-size: 12px !important;
+}
+
+.buttons-container {
+    cursor: pointer;
+}
+
+.week {
+    overflow: hidden;
+}
+
+.week.highlight {
+    background: #efefef;
+}
+
+/* weekend */
+.week .day:first-child, .week .day:last-child {
+    /*color: orange;*/
+}
+
+/* sunday */
+.week .day:first-child {
+    /*color: red;*/
+}
+
+.day {
+    display: inline-block;
+    float: left;
+    width: 14.28%;
+    text-align: center;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.day.disabled span {
+    color: #AAA;
+}
+
+/* vertical highlight */
+.week .day.highlight span {
+    /*color: blue;*/
+}
+
+.day.selected span {
+    /*background: orange;*/
+}
+
+.day.today span {
+    font-weight: bold;
+}
+
+.months-container.hidden, .weeks-container.hidden {
+    display: none;
+}
+
+.months-wrapper {
+    overflow: hidden;
+}
+
+.months-wrapper .month {
+    display: inline-block;
+    float: left;
+    width: 25%;
+    text-align: center;
+    cursor: pointer;
+}
+.months-wrapper .month.one-third {
+    width: 33.33%;
+}
+i[class^=icon-chevron]{
+    color: #FFFFFF;
+    float: left;
+    width:15%;
+    border-radius: 50%;
+}
+.day .header.highlight {
+    position: relative;
+    background-color: #fff;
+    padding: 1px !important;
+}

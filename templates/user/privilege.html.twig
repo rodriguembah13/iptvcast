@@ -1,0 +1,57 @@
+{% extends 'basestats.html.twig' %}
+{% block sub_tilte %}
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box page-title-box-alt">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Agency</a></li>
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Permissions</a></li>
+                    </ol>
+                </div>
+                <h4 class="page-title">Permissions</h4>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Modifier permission {{ user.name }}</h5>
+            </div>
+            <div class="card-body">
+
+                {{ form_start(form) }}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        {{ form_row(form.viewComportement) }}
+                        {{ form_row(form.viewConfrontationdirect) }}
+                        {{ form_row(form.viewdeuxmarque) }}
+                        {{ form_row(form.viewInvincibitemitemps) }}
+                        {{ form_row(form.viewScoreexact) }}
+                        {{ form_row(form.maxpronostic) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_row(form.viewEventfulltime) }}
+                        {{ form_row(form.viewEventhalftime) }}
+                        {{ form_row(form.viewInvincibilite) }}
+                        {{ form_row(form.viewTrifulltime) }}
+                        {{ form_row(form.viewTrihalftime) }}
+                    </div>
+                </div>
+                <a href="{{ path('user_index') }}" class="btn btn-warning btn-sm">{{ button_label|default('Annuler') }}</a>
+                <button class="btn btn-sm btn-primary">{{ button_label|default('Modifier') }}</button>
+                {{ form_end(form) }}
+            </div>
+        </div></div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+{% endblock %}
+
+
+

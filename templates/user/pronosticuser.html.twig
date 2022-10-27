@@ -1,0 +1,48 @@
+{% extends 'basestats.html.twig' %}
+{% block sub_tilte %}
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box page-title-box-alt">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Agency</a></li>
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Pronostics utilisateur</a></li>
+                    </ol>
+                </div>
+                <h4 class="page-title">Pronostics utilisateur</h4>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+{% endblock %}
+{% block body %}
+<div class="container-fluid">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Pourcentage domicile</th>
+            <th>Pourcentage Exterieur</th>
+            <th>Resultat</th>
+            <th>Rubrique</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in pronostics %}
+            <tr>
+                <td>{{ item.phome }}</td>
+                <td>{{ item.paway }}</td>
+                <td>{{ item.resultat }}</td>
+                <td>{{ item.rubrique }}</td>
+                <td><a class="btn btn-sm btn-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick='getItem_id({{ item.id }})'><i class="fa fa-times"></i></a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+            </div></div></div></div>
+{% endblock %}
+

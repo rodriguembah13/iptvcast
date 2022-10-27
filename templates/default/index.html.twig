@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+{% block title %}Accueil{% endblock %}
+{% block sub_tilte %}
+{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style type="text/css">
+        .main-content .highlight {
+            position: relative;
+            background-color: #fff;
+            padding: 1px;
+        }
+        li{
+            cursor: pointer;
+        }
+        .main-content {
+            font-size: 12px !important;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-xl-12 main-content ps-xl-4 pe-xl-5">
+
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    {% include 'default/javascripts.html.twig' %}
+    <script src="{{ asset('assets/js/calendar.min.js') }}"></script>
+
+{% endblock %}
+

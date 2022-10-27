@@ -1,0 +1,49 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    API_URL: '%env(resolve:API_URL)%'
+    API_USERNAME: '%env(resolve:API_USERNAME)%'
+    API_PASSWORD: '%env(resolve:API_PASSWORD)%'
+    EKOLOAPI: '%env(resolve:EKOLOAPI)%'
+    EKOLO_SECRETKEY: '%env(resolve:EKOLO_SECRETKEY)%'
+    EKOLO_URL: '%env(resolve:EKOLO_URL)%'
+    FLU_PUBLIC: '%env(resolve:FLU_PUBLIC)%'
+    FLU_SECRET: '%env(resolve:FLU_SECRET)%'
+    FLU_ENCRIPT: '%env(resolve:FLU_ENCRIPT)%'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    kernel.listener.exception_listener:
+        class: App\Listener\ExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+        calls:
+            - [ setLogger, [ '@logger' ] ]
+    app.jttp_handler:
+        class: App\Handlers\JttpHandler
+        arguments:
+            - "@logger"
+
+    app.view_handler:
+        parent: fos_rest.view_handler.default
+        autowire: false
+        autoconfigure: false
+        public: false
+        calls:
+            - ['registerHandler', [ 'json', ["@app.jttp_handler", 'createResponse'] ] ]

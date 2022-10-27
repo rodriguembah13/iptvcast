@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Update bouquet
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h4>Modify bouquet: {{ bouquet.name }}</h4>
+            </div>
+            <div class="card-body">
+                <input id="id_chanel" value="{{ bouquet.id }}" type="hidden">
+                <div class="row mb-3">
+                    <label for="exampleInputUsername2" class="col-sm-3 col-form-label">Name</label>
+                    <div class="col-sm-9">
+                        <input type="text" value="{{ bouquet.name }}" class="form-control" id="name_chanel" placeholder="Name">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="exampleInputEmail2" class="col-sm-3 col-form-label">Price</label>
+                    <div class="col-sm-9">
+                        <input type="number" value="{{ bouquet.price }}" class="form-control" id="price_chanel" autocomplete="off"
+                               placeholder="Price">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="col-sm-3 form-label">Channels</label>
+                    <div class="col-sm-9">
+                       {# <select class="js-example-basic-single form-select mb-3" id="chanels" data-width="100%">
+                            {% for item in data %}
+                                <option data-name="{{ item.name }}" value="{{ item.num }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>#}
+                        <hr>
+                        <div class="row mb-3">
+                            <h4 class="mb-3">Lists chanels</h4>
+                            <ul class="list-group " id="chanels_item">
+                                {% for val in chanels %}
+                                    <li class='list-group-item' id='line_{{ val.num }}' data-value='{{ val.num }}'>{{ val.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn btn-primary me-2" id="submit_chanel">Submit</button>
+                <button class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#chanels').change(function () {
+                //console.log($('#chanels option:selected').data('name'));
+                var idtd = "line_" + $('#chanels option:selected').val();
+                var id =  $('#chanels option:selected').val();
+                $('#chanels_item').append(
+                    "<li class='list-group-item' id='" + idtd + "' data-value='"+id+"'>"+$('#chanels option:selected').data('name')+" <a onclick='removeRowAjax(" + id+ ")' class='btn btn-sm btn-danger float-end'><i class=\"me-2 icon-md\" data-feather=\"trash\"></i>Remove</a></li>"
+                )
+            });
+            $('#submit_chanel').click(function () {
+                jsonObj = [];
+                $("#chanels_item>li").each(function () {
+                    var id = $(this).data('value');
+                    item = {};
+                    item['id'] = id;
+                    jsonObj.push(item)
+                });
+                console.log(JSON.stringify({data: jsonObj}))
+                $.ajax({
+                    url: "{{ path('savechanels') }}",
+                    type: "POST",
+                    dataType: "JSON",
+                    data: {
+                        chanels:jsonObj,
+                        name:$('#name_chanel').val(),
+                        price:$('#price_chanel').val(),
+                        id:$('#id_chanel').val(),
+                    },
+                    success: function (data) {
+                        setTimeout(function () {
+                            $("#overlay").fadeOut(300);
+                        }, 500);
+                        window.location.reload();
+                    },
+                    error: function (err) {
+                        setTimeout(function () {
+                            $("#overlay").fadeOut(300);
+                        }, 500);
+                    }
+                });
+            })
+        });
+        function removeRowAjax(id) {
+            line = "#line_" + id;
+            $(line).remove();
+
+        }
+
+    </script>
+{% endblock %}
+
+

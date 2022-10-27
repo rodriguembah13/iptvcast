@@ -1,0 +1,73 @@
+{% extends 'basestats.html.twig' %}
+{% block sub_tilte %}
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box page-title-box-alt">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Adminto</a></li>
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Dashboard</a></li>
+                    </ol>
+                </div>
+                <h4 class="page-title">Dashboard</h4>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Sms: Solde {{ solde }}</h5>
+                <a class="float-right btn btn-success" href="#"  data-toggle="modal" data-target="#smsModal"><i class="fa fa-plus"></i>
+                    Nouveau</a>
+            </div>
+            <div class="card-body">
+                <div id="phones">{{ 'loading'|trans({}, 'messages') }}</div>
+            </div>
+        </div>
+    </div>
+    <!-- Logout Modal-->
+    <div class="modal fade" id="smsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5> Ajouter les numéros</h5>
+            </div>
+            <div class="modal-body">
+               <form>
+                   <div class="form-group">
+                       <label class="" for="groupe">Groupe</label>
+                       <input class="form-control" type="text" name="groupe" id="groupe">
+                   </div>
+                   <div class="form-group">
+                       <label class="" for="groupe">Liste de numeros</label>
+                       <textarea class="form-control" name="listphone" id="listphone"></textarea>
+
+                   </div>
+                   <p>Nombres de numero de telephone: <span id="compteur"></span></p>
+               </form>
+            </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-primary" id="savephonesms">Save</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#phones').initDataTables({{ datatable_settings(datatable) }});
+        });
+    </script>
+    {% include 'sms/javascript.html.twig' %}
+{% endblock %}
+
