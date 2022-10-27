@@ -151,7 +151,7 @@ class StaticApiController extends AbstractFOSRestController
         return $this->handleView($view);
     }
     /**
-     * @Rest\Post("/personnels", name="api_personnels_ajax")
+     * @Rest\Post("/v1/personnels", name="api_personnels_ajax")
      * @param Request $request
      * @return Response
      */
@@ -186,11 +186,10 @@ class StaticApiController extends AbstractFOSRestController
         ], 200);
     }
     /**
-     * @Rest\Post("/agences", name="api_agences_ajax")
+     * @Rest\Post("/v1/agences", name="api_agences_post_ajax")
      * @param Request $request
-     * @return Response
      */
-    public function postagences(Request $request): Response
+    public function postagences(Request $request): JsonResponse
     {
         $res = json_decode($request->getContent(), true);
         $data=$res['data'];
@@ -211,7 +210,7 @@ class StaticApiController extends AbstractFOSRestController
         ], 200);
     }
     /**
-     * @Rest\Post("/customers", name="api_customers_ajax")
+     * @Rest\Post("/v1/customers", name="api_customers_ajax")
      * @param Request $request
      * @return Response
      */
@@ -265,7 +264,7 @@ class StaticApiController extends AbstractFOSRestController
         ], 200);
     }
     /**
-     * @Rest\Post("/activations", name="api_activations_ajax")
+     * @Rest\Post("/v1/activations", name="api_activations_ajax")
      * @param Request $request
      * @return Response
      */
