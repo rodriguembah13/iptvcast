@@ -8,6 +8,7 @@ use App\Entity\Activation;
 use App\Entity\Agence;
 use App\Entity\Card;
 use App\Entity\CardCustomer;
+use App\Entity\CardPending;
 use App\Entity\Customer;
 use App\Entity\Personnel;
 use App\Entity\User;
@@ -92,6 +93,28 @@ class StaticApiController extends AbstractFOSRestController
         return $this->handleView($view);
     }
     /**
+     * @Rest\Get("/v1/customers/search", name="api_search_customers")
+     * @return Response
+     */
+    public function searchCustomers(Request $request)
+    {
+        $customers = $this->customerRepository->searchCustomer($request->get('q'));
+        $values = [];
+        foreach ($customers as $customer) {
+            $values[] = [
+                'id' => $customer->getId(),
+                'name' => $customer->getCompte()->getName(),
+                'phone' => $customer->getCompte()->getPhone(),
+                'email' => $customer->getCompte()->getEmail(),
+                'agence' => $customer->getAgence()->getName(),
+                'address' => $customer->getAddress(),
+                'city' => $customer->getCity()
+            ];
+        }
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
      * @Rest\Get("/v1/agences", name="api_agences")
      * @return Response
      */
@@ -145,6 +168,43 @@ class StaticApiController extends AbstractFOSRestController
                 'numero' => $bouquet->getNumero(),
                 'id' => $bouquet->getId(),
                 'price' => $bouquet->getPrice(),
+            ];
+        }
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
+     * @Rest\Get("/v1/cards", name="api_cards")
+     * @return Response
+     */
+    public function getAllCards()
+    {
+        $cards = $this->cardRepository->findAll();
+        $values = [];
+        foreach ($cards as $card) {
+            $values[] = [
+                'name' => $card->getName(),
+                'numero' => $card->getNumerocard(),
+                'id' => $card->getId(),
+            ];
+        }
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
+     * @Rest\Get("/v1/cards/customer/{id}", name="api_customer_cards")
+     * @return Response
+     */
+    public function getCardBycustomer(Customer $customer)
+    {
+        $cards = $this->cardcustomerRepository->findBy(['customer'=>$customer]);
+        $values = [];
+        foreach ($cards as $card) {
+            $values[] = [
+                'name' => $card->getCard()->getName(),
+                'numero' => $card->getCard()->getNumerocard(),
+                'expireddate' => $card->getPeriodto(),
+                'id' => $card->getCard()->getId(),
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);
@@ -278,6 +338,15 @@ class StaticApiController extends AbstractFOSRestController
         $actiavtion->setCard($card);
         $actiavtion->setAmount($data['amount']);
         $actiavtion->setMonthto($data['monthto']);
+        $this->doctrine->persist($actiavtion);
+        $cardpending=new CardPending();
+        $cardpending->setCardid($data['cardid']);
+        $cardpending->setIsdelete(false);
+        $cardpending->setSendornot(1);
+        $cardpending->setCardstatus(1);
+        $cardpending->setExpiredtime(new \DateTime($data['expired_time'],New \DateTimeZone('Africa/Douala')));
+        $this->doctrine->persist($cardpending);
+
         $this->doctrine->flush();
         return new JsonResponse([
             'status'=>200,
