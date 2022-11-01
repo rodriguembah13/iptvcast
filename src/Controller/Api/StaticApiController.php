@@ -341,7 +341,7 @@ class StaticApiController extends AbstractFOSRestController
         $this->doctrine->persist($actiavtion);
         $cardpending=new CardPending();
         $cardpending->setCardid($data['cardid']);
-        $cardpending->setIsdelete(false);
+        $cardpending->setIsdelete(true);
         $cardpending->setSendornot(1);
         $cardpending->setCardstatus(1);
         $cardpending->setExpiredtime(new \DateTime($data['expired_time'],New \DateTimeZone('Africa/Douala')));
