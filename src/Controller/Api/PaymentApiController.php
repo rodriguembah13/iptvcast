@@ -4,13 +4,20 @@
 namespace App\Controller\Api;
 
 
-
+use App\Entity\Activation;
+use App\Entity\Card;
+use App\Entity\CardCustomer;
+use App\Entity\CardPending;
 use App\Entity\Souscription;
+use App\Repository\ActivationRepository;
 use App\Repository\BouquetRepository;
+use App\Repository\CardCustomerRepository;
+use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
 use App\Service\paiement\EkolopayService;
 use App\Service\paiement\FlutterwaveService;
+use App\Utils\ClientPaymoo;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -25,32 +32,40 @@ class PaymentApiController extends AbstractFOSRestController
     private $userRepository;
     private $logger;
     private $params;
-    private $ekoloService;
     private $doctrine;
-    private $souscriptionRepository;
     private $bouquetRepository;
     private $flutterService;
+    private $cardRepository;
+    private $cardcustomerRepository;
+    private $activationRepository;
 
     /**
      * PaymentApiController constructor.
+     * @param CardRepository $cardRepository
+     * @param FlutterwaveService $flutterwaveService
      * @param UserRepository $userRepository
      * @param BouquetRepository $bouquetRepository
      * @param LoggerInterface $logger
-     * @param EkolopayService $ekolopayService
+     * @param CardCustomerRepository $cardCustomerRepository
+     * @param ActivationRepository $activationRepository
+     * @param CustomerRepository $customerRepository
      * @param EntityManagerInterface $entityManager
      */
-    public function __construct(FlutterwaveService $flutterwaveService,UserRepository $userRepository,BouquetRepository $bouquetRepository,
-                                LoggerInterface $logger,EkolopayService $ekolopayService,CustomerRepository $customerRepository,
+    public function __construct(CardRepository $cardRepository, FlutterwaveService $flutterwaveService, UserRepository $userRepository, BouquetRepository $bouquetRepository,
+                                LoggerInterface $logger, CardCustomerRepository $cardCustomerRepository, ActivationRepository $activationRepository,
+                                CustomerRepository $customerRepository,
 
                                 EntityManagerInterface $entityManager)
     {
         $this->userRepository = $userRepository;
-        $this->ekoloService=$ekolopayService;
         $this->logger = $logger;
-        $this->doctrine=$entityManager;
-        $this->bouquetRepository=$bouquetRepository;
-        $this->customerRepository=$customerRepository;
-        $this->flutterService=$flutterwaveService;
+        $this->doctrine = $entityManager;
+        $this->bouquetRepository = $bouquetRepository;
+        $this->customerRepository = $customerRepository;
+        $this->flutterService = $flutterwaveService;
+        $this->cardRepository = $cardRepository;
+        $this->cardcustomerRepository = $cardCustomerRepository;
+        $this->activationRepository = $activationRepository;
     }
 
     /**
@@ -61,128 +76,102 @@ class PaymentApiController extends AbstractFOSRestController
     public function notifyurl(Request $request): Response
     {
         $this->logger->error("notify call");
-        $token = $_POST['purchaseToken'];
-        $this->logger->error($token);
-        $statusbool = $_POST['paymentSuccessful'];
-        $status = $_POST['status'];
-        $souscription = $this->souscriptionRepository->findOneBy(['tokentransaction'=>$token]);
-        if ($statusbool==true){
-            $response= $this->ekoloService->verifierPayment($token);
-            if ($response['code']==200){
-                $souscription->setStatut(Souscription::ACCEPTED);
-               $customer= $souscription->getCustomer();
-               $date=$customer->getExpiredAt();
-               $month=$this->getPeriodeFromAmouint($souscription->getAmount());
-                date_add($date, date_interval_create_from_date_string($month." months"));
-               $customer->setExpiredAt($date);
-            }else{
-                $souscription->setStatut(Souscription::ECHEC);
-            }
+        $reference = $_POST['item_ref'];
+        $this->logger->error($reference);
+        $statusbool = $_POST['status'];
+        $activation=$this->activationRepository->findOneBy(['reference'=>$reference,'status'=>Activation::PENDING]);
+        if ($statusbool == "Success") {
+          $activation->setStatus(Activation::SUCCESS);
+        }else{
+            $activation->setStatus(Activation::ECHEC);
         }
         $this->doctrine->flush();
         return new JsonResponse([], 200);
     }
+
     /**
-     * @Rest\Post("/v1/sendpaiementekolo/ajax", name="sendpaiementekolopay", methods={"POST"})
+     * @Rest\Post("/v1/activations", name="api_activations_get_ajax")
+     * @param Request $request
+     * @return Response
      */
-    public function sendpaiementcinetpay(Request $request): Response
+    public function activatecard(Request $request): Response
     {
-        $this->logger->error($this->getParameter("EKOLO_URL"));
         $res = json_decode($request->getContent(), true);
-        $data=$res['data'];
+        $data = $res['data'];
+        $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $reference = "";
         $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
         for ($i = 1; $i <= 12; ++$i) {
             $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
         }
-        $customer=$this->customerRepository->find($data['customer_id']);
-        $bouquet=$this->bouquetRepository->find($data['bouquet_id']);
-        $notify_url = $this->generateUrl('notifyurlflutterajax', ['ref' => $reference, 'customer' => $customer->getId()]);
-        $notify_url = $this->params->get('domain') . $notify_url;
+        if (strtolower($data['method']) == 'mobile money') {
+            $currency = "XAF";
+        } else {
+            $currency = "USD";
+        }
         $data = [
-            'amount' => $bouquet->getPrice(),
-            'currency' => 'USD',
-            'payment_method' => 'card',
-            'country' => 'CMR',
-            'ref' => $reference,
-            'title' => 'Bouquet: '.$bouquet->getName(),
-            'description' => 'Voting session',
-            'email' => $data['email'],
-            'phonenumber' => $data['phone'],
-            'name' => 'Bouquet: '.$bouquet->getName(),
-            'last_name' => $customer->getCompte()->getName(),
-            'logo' => 'http://www.piedpiper.com/app/themes/joystick-v27/images/logo.png',
-            'pay_button_text' => "Valider le vote",
-            'successurl' => $notify_url,
-            'redirect_url' => $notify_url,
+            'amount' => $data['amount'],
+            'currency_code' => $currency,
+            'ccode' => 'CM',
+            'lang' => 'en',
+            'item_ref' => $reference,
+            'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
+            'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
+            'email' => 'exemple@email.com',
+            'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
+            'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
+            'last_name' => 'Surname',
+            'public_key' => $this->params->get('PAYMONNEY_KEY'),
+            'logo' => 'https://paymooney.com/images/logo_paymooney2.png',
+            'environement' => 'test'
         ];
-        $response= $this->flutterService->postPayement($data);
-        $this->logger->info($notify_url);
-        $arrays=[];
-        if ($response['status'] == "success"){
-            $souscription=new Souscription();
-            $souscription->setCustomer($customer);
-            $souscription->setBouquet($bouquet);
-            $souscription->setCreated(new \DateTime('now',new \DateTimeZone('Africa/Douala')));
-            $souscription->setStatus(Souscription::PENDING);
-            $this->doctrine->persist($souscription);
-            $this->doctrine->flush();
-            $returnurl= $response["data"]['link'];;
-            $arrays=[
-              'code'=>200,
-                'url'=>$returnurl,
-              'message'=>'transaction send'
+        $client = new ClientPaymoo();
+        $response = $client->postfinal("payment_url", $data);
+        $this->logger->info($response['response']);
+        if ($response['response'] == "success") {
+            $this->createActivate($cardcustomer, $reference, $data['amount']);
+            $url = $response["payment_url"];
+            $this->logger->info($url);
+            $link_array = explode('/', $url);
+            $response = [
+                'url'=>$url,
+                'code'=>200
             ];
+            $view = $this->view($response, Response::HTTP_OK, []);
+            return $this->handleView($view);
         }else{
-            $arrays=[
-                'code'=>0,
-                'token'=>"",
-                'message'=>'echec de transaction'
+            $response = [
+                'url'=>"",
+                'code'=>500
             ];
+            $view = $this->view($response, Response::HTTP_OK, []);
+            return $this->handleView($view);
         }
-         $view = $this->view($arrays, Response::HTTP_OK, []);
-        return $this->handleView($view);
-     }
-     function getAmount($periode){
-        $val=650;
-        switch ($periode){
-            case "1":
-                $val=650;
-                break;
-            case "2":
-                $val=2*650;
-                break;
-            case "3":
-                $val=3*650;
-                break;
-            case "4":
-                $val=4*650;
-                break;
-            case "5":
-                $val=5*650;
-                break;
-        }
-        return $val;
-     }
-    function getPeriodeFromAmouint($amount){
-        $val=1;
-        switch ($amount){
-            case 650:
-                $val=1;
-                break;
-            case 1300:
-                $val=2;
-                break;
-            case 1950:
-                $val=3;
-                break;
-            case 2600:
-                $val=4;
-                break;
-            case 3250:
-                $val=5;
-                break;
-        }
-        return $val;
+
+
+    }
+
+    function createActivate(CardCustomer $card, $reference, $amount)
+    {
+        $actiavtion = new Activation();
+        $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+        $actiavtion->setCard($card->getCard());
+        $actiavtion->setAmount($amount);
+        $month = intdiv($amount, $card->getCard()->getAmount());
+        $actiavtion->setMonthto($month);
+        $actiavtion->setReference($reference);
+        $actiavtion->setStatus(Activation::PENDING);
+        $this->doctrine->persist($actiavtion);
+        $cardpending = new CardPending();
+        $cardpending->setCardid($card->getCard()->getNumerocard());
+        $cardpending->setIsdelete(true);
+        $cardpending->setSendornot(1);
+        $cardpending->setCardstatus(1);
+        $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d: h:m'), new \DateTimeZone('Africa/Douala'));
+        $mod = "+" . $month . " month";
+        $date_line->modify($mod);
+        $cardpending->setExpiredtime($date_line);
+        $this->doctrine->persist($cardpending);
+        $this->doctrine->flush();
     }
 }

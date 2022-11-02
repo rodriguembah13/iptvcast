@@ -13,6 +13,7 @@ parameters:
     FLU_PUBLIC: '%env(resolve:FLU_PUBLIC)%'
     FLU_SECRET: '%env(resolve:FLU_SECRET)%'
     FLU_ENCRIPT: '%env(resolve:FLU_ENCRIPT)%'
+    PAYMONNEY_KEY: '%env(resolve:PAYMONNEY_KEY)%'
 
 services:
     # default configuration for services in *this* file

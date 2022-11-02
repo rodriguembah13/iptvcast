@@ -10,6 +10,9 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Activation
 {
+    public const PENDING="PENDING";
+    public const ECHEC="ECHEC";
+    public const SUCCESS="SUCCESS";
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -41,6 +44,16 @@ class Activation
      * @ORM\ManyToOne(targetEntity=Personnel::class)
      */
     private $createdBy;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $status=self::PENDING;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
 
 
 
@@ -105,6 +118,30 @@ class Activation
     public function setCreatedBy(?Personnel $createdBy): self
     {
         $this->createdBy = $createdBy;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
 
         return $this;
     }

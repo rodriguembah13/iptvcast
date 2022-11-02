@@ -21,7 +21,10 @@ class Card
      * @ORM\Column(type="string", length=255)
      */
     private $numerocard;
-
+    /**
+     * @ORM\Column(type="float", length=255)
+     */
+    private $amount;
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -35,6 +38,19 @@ class Card
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getAmount(): ?float
+    {
+        return $this->amount;
+    }
+
+    /**
+     * @param mixed $amount
+     */
+    public function setAmount($amount): void
+    {
+        $this->amount = $amount;
     }
 
     public function getNumerocard(): ?string

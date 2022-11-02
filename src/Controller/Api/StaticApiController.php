@@ -209,8 +209,9 @@ class StaticApiController extends AbstractFOSRestController
                 'name' => $card->getCard()->getName(),
                 'numero' => $card->getCard()->getNumerocard(),
                 'amount' => $card->getAmount(),
+                'created'=>$card->getCreatedAt()->format('Y-m-d h:m:s'),
                 'monthto' => $card->getMonthto(),
-                'id' => $card->getCard()->getId(),
+                'id' => $card->getId(),
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);
@@ -229,7 +230,7 @@ class StaticApiController extends AbstractFOSRestController
                 'name' => $card->getCard()->getName(),
                 'numero' => $card->getCard()->getNumerocard(),
                 'expireddate' => $card->getPeriodto(),
-                'id' => $card->getCard()->getId(),
+                'id' => $card->getId(),
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);
@@ -265,16 +266,18 @@ class StaticApiController extends AbstractFOSRestController
         $compte->setName($data['name']);
         $compte->setPhone($data['phone']);
         $this->doctrine->flush();
-        return new JsonResponse([
+        $response=[
             'status'=>200,
             'message'=>"Successful request"
-        ], 200);
+        ];
+        $view = $this->view($response, Response::HTTP_OK, []);
+        return $this->handleView($view);
     }
     /**
      * @Rest\Post("/v1/agences", name="api_agences_post_ajax")
      * @param Request $request
      */
-    public function postagences(Request $request): JsonResponse
+    public function postagences(Request $request)
     {
         $res = json_decode($request->getContent(), true);
         $data=$res['data'];
@@ -289,10 +292,12 @@ class StaticApiController extends AbstractFOSRestController
         $agence->setAddress($data['address']);
         $agence->setCity($data['city']);
         $this->doctrine->flush();
-        return new JsonResponse([
+        $response=[
             'status'=>200,
             'message'=>"Successful request"
-        ], 200);
+        ];
+        $view = $this->view($response, Response::HTTP_OK, []);
+        return $this->handleView($view);
     }
     /**
      * @Rest\Post("/v1/customers", name="api_customers_ajax")
@@ -340,42 +345,16 @@ class StaticApiController extends AbstractFOSRestController
         $compte->setName($data['name']);
         $compte->setPhone($data['phone']);
         $this->doctrine->flush();
-        return new JsonResponse([
+
+        $response=[
             'status'=>200,
             'message'=>"Successful request",
             'iscreated'=>$iscreated,
             'customerid'=>$customer->getId(),
             'cardnumber'=>$data['cardid']
-        ], 200);
+        ];
+        $view = $this->view($response, Response::HTTP_OK, []);
+        return $this->handleView($view);
     }
-    /**
-     * @Rest\Post("/v1/activations", name="api_activations_get_ajax")
-     * @param Request $request
-     * @return Response
-     */
-    public function activatecard(Request $request): Response
-    {
-        $res = json_decode($request->getContent(), true);
-        $data = $res['data'];
-        $card=$this->cardRepository->findOneBy(['numerocard'=>$data['cardid']]);
-        $actiavtion=new Activation();
-        $actiavtion->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
-        $actiavtion->setCard($card);
-        $actiavtion->setAmount($data['amount']);
-        $actiavtion->setMonthto($data['monthto']);
-        $this->doctrine->persist($actiavtion);
-        $cardpending=new CardPending();
-        $cardpending->setCardid($data['cardid']);
-        $cardpending->setIsdelete(true);
-        $cardpending->setSendornot(1);
-        $cardpending->setCardstatus(1);
-        $cardpending->setExpiredtime(new \DateTime($data['expired_time'],New \DateTimeZone('Africa/Douala')));
-        $this->doctrine->persist($cardpending);
 
-        $this->doctrine->flush();
-        return new JsonResponse([
-            'status'=>200,
-            'message'=>"Successful request",
-        ], 200);
-    }
 }
