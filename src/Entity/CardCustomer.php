@@ -41,7 +41,10 @@ class CardCustomer
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $periodto;
-
+    /**
+     * @ORM\Column(type="float", length=255, nullable=true)
+     */
+    private $amount;
     public function getId(): ?int
     {
         return $this->id;
@@ -69,6 +72,22 @@ class CardCustomer
         $this->card = $card;
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAmount()
+    {
+        return $this->amount;
+    }
+
+    /**
+     * @param mixed $amount
+     */
+    public function setAmount($amount): void
+    {
+        $this->amount = $amount;
     }
 
     public function getCreatedAt(): ?\DateTimeImmutable

@@ -97,6 +97,24 @@ class StaticApiController extends AbstractFOSRestController
         return $this->handleView($view);
     }
     /**
+     * @Rest\Get("/v1/customers/{id}/one", name="api_one_customers")
+     * @return Response
+     */
+    public function getOneCustomer(Customer $customer)
+    {
+            $values = [
+                'id' => $customer->getId(),
+                'name' => $customer->getCompte()->getName(),
+                'phone' => $customer->getCompte()->getPhone(),
+                'email' => $customer->getCompte()->getEmail(),
+                'agence' => $customer->getAgence()->getName(),
+                'address' => $customer->getAddress(),
+                'city' => $customer->getCity()
+            ];
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
      * @Rest\Get("/v1/customers/search", name="api_search_customers")
      * @return Response
      */
@@ -188,6 +206,7 @@ class StaticApiController extends AbstractFOSRestController
         foreach ($cards as $card) {
             $values[] = [
                 'name' => $card->getName(),
+                'amount' => $card->getAmount(),
                 'numero' => $card->getNumerocard(),
                 'id' => $card->getId(),
             ];
@@ -309,7 +328,6 @@ class StaticApiController extends AbstractFOSRestController
         $res = json_decode($request->getContent(), true);
         $data=$res['data'];
         $iscreated=false;
-
         $agence=$this->agenceRepository->find($data['agence']);
         if (!is_null($data['id'])){
             $customer=$this->customerRepository->find($data['id']);
@@ -326,17 +344,6 @@ class StaticApiController extends AbstractFOSRestController
             $customer->setCompte($compte);
             $customer->setDatecreation(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
             $this->doctrine->persist($customer);
-            $card=new Card();
-            $card->setName($data['cardname']);
-            $card->setNumerocard($data['cardid']);
-            $this->doctrine->persist($card);
-            $cardcustomer=new CardCustomer();
-            $cardcustomer->setCustomer($customer);
-            $cardcustomer->setCard($card);
-            $cardcustomer->setIsActive(false);
-            $cardcustomer->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
-            $cardcustomer->setPeriodto(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
-            $this->doctrine->persist($cardcustomer);
             $iscreated=true;
         }
         $customer->setAgence($agence);
@@ -345,16 +352,50 @@ class StaticApiController extends AbstractFOSRestController
         $compte->setName($data['name']);
         $compte->setPhone($data['phone']);
         $this->doctrine->flush();
-
         $response=[
             'status'=>200,
             'message'=>"Successful request",
-            'iscreated'=>$iscreated,
-            'customerid'=>$customer->getId(),
-            'cardnumber'=>$data['cardid']
+            'customer'=>$customer,
+        ];
+        $view = $this->view([
+            'id' => $customer->getId(),
+            'name' => $customer->getCompte()->getName(),
+            'phone' => $customer->getCompte()->getPhone(),
+            'email' => $customer->getCompte()->getEmail(),
+            'agence' => $customer->getAgence()->getName(),
+            'address' => $customer->getAddress(),
+            'city' => $customer->getCity()
+        ], Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
+     * @Rest\Post("/v1/cards/add", name="api_cards_ajax")
+     * @param Request $request
+     * @return Response
+     */
+    public function addCard(Request $request): Response
+    {
+        $res = json_decode($request->getContent(), true);
+        $data=$res['data'];
+        $customer=$this->customerRepository->find($data['customer']);
+        $card=new Card();
+        $card->setName($data['cardname']);
+        $card->setNumerocard($data['cardid']);
+        $card->setAmount($data['amount']);
+        $this->doctrine->persist($card);
+        $cardcustomer=new CardCustomer();
+        $cardcustomer->setCustomer($customer);
+        $cardcustomer->setCard($card);
+        $cardcustomer->setIsActive(false);
+        $cardcustomer->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
+        $cardcustomer->setPeriodto(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
+        $this->doctrine->persist($cardcustomer);
+        $this->doctrine->flush();
+        $response=[
+            'status'=>200,
+            'message'=>"Successful request",
         ];
         $view = $this->view($response, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
-
 }

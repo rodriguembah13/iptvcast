@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Utils;
+namespace App\Service\paiement;
 
 
 use GuzzleHttp\Client;

@@ -15,13 +15,14 @@ use App\Repository\CardCustomerRepository;
 use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
+use App\Service\paiement\ClientPaymoo;
 use App\Service\paiement\EkolopayService;
 use App\Service\paiement\FlutterwaveService;
-use App\Utils\ClientPaymoo;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -51,10 +52,12 @@ class PaymentApiController extends AbstractFOSRestController
      * @param CustomerRepository $customerRepository
      * @param EntityManagerInterface $entityManager
      */
-    public function __construct(CardRepository $cardRepository, FlutterwaveService $flutterwaveService, UserRepository $userRepository, BouquetRepository $bouquetRepository,
+    public function __construct(CardRepository $cardRepository,
+                                FlutterwaveService $flutterwaveService,
+                                UserRepository $userRepository, ParameterBagInterface $params,
+                                BouquetRepository $bouquetRepository,
                                 LoggerInterface $logger, CardCustomerRepository $cardCustomerRepository, ActivationRepository $activationRepository,
                                 CustomerRepository $customerRepository,
-
                                 EntityManagerInterface $entityManager)
     {
         $this->userRepository = $userRepository;
@@ -66,6 +69,7 @@ class PaymentApiController extends AbstractFOSRestController
         $this->cardRepository = $cardRepository;
         $this->cardcustomerRepository = $cardCustomerRepository;
         $this->activationRepository = $activationRepository;
+        $this->params = $params;
     }
 
     /**
@@ -147,10 +151,7 @@ class PaymentApiController extends AbstractFOSRestController
             $view = $this->view($response, Response::HTTP_OK, []);
             return $this->handleView($view);
         }
-
-
     }
-
     function createActivate(CardCustomer $card, $reference, $amount)
     {
         $actiavtion = new Activation();
@@ -167,7 +168,7 @@ class PaymentApiController extends AbstractFOSRestController
         $cardpending->setIsdelete(true);
         $cardpending->setSendornot(1);
         $cardpending->setCardstatus(1);
-        $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d: h:m'), new \DateTimeZone('Africa/Douala'));
+        $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
         $mod = "+" . $month . " month";
         $date_line->modify($mod);
         $cardpending->setExpiredtime($date_line);

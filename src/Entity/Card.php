@@ -22,35 +22,41 @@ class Card
      */
     private $numerocard;
     /**
-     * @ORM\Column(type="float", length=255)
-     */
-    private $amount;
-    /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $name;
-
+    /**
+     * @ORM\Column(type="float", length=255, nullable=true)
+     */
+    private $amount;
     /**
      * @ORM\Column(type="simple_array", nullable=true)
      */
     private $bouquets = [];
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $created;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getAmount(): ?float
+    /**
+     * @return mixed
+     */
+    public function getCreated()
     {
-        return $this->amount;
+        return $this->created;
     }
 
     /**
-     * @param mixed $amount
+     * @param mixed $created
      */
-    public function setAmount($amount): void
+    public function setCreated($created): void
     {
-        $this->amount = $amount;
+        $this->created = $created;
     }
 
     public function getNumerocard(): ?string
@@ -63,6 +69,22 @@ class Card
         $this->numerocard = $numerocard;
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAmount():?float
+    {
+        return $this->amount;
+    }
+
+    /**
+     * @param mixed $amount
+     */
+    public function setAmount($amount): void
+    {
+        $this->amount = $amount;
     }
 
     public function getName(): ?string
