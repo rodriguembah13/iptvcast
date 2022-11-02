@@ -12,6 +12,7 @@ use App\Entity\CardPending;
 use App\Entity\Customer;
 use App\Entity\Personnel;
 use App\Entity\User;
+use App\Repository\ActivationRepository;
 use App\Repository\AgenceRepository;
 use App\Repository\BouquetRepository;
 use App\Repository\CardCustomerRepository;
@@ -41,6 +42,7 @@ class StaticApiController extends AbstractFOSRestController
     private $personnelRepository;
     private $doctrine;
     private $passwordEncoder;
+    private $activationRepository;
 
     /**
      * IptvApiController constructor.
@@ -52,7 +54,8 @@ class StaticApiController extends AbstractFOSRestController
      * @param EndpointService $endpointService
      * @param CustomerRepository $customerRepository
      */
-    public function __construct(BouquetRepository $bouquetRepository, LoggerInterface $logger,EntityManagerInterface $entityManager,
+    public function __construct(BouquetRepository $bouquetRepository, LoggerInterface $logger,
+                                EntityManagerInterface $entityManager,ActivationRepository $activationRepository,
                                 AgenceRepository $agenceRepository,PersonnelRepository $personnelRepository,
                                 CardCustomerRepository $cardCustomerRepository, CardRepository $cardRepository,
                                 EndpointService $endpointService,UserPasswordHasherInterface $passwordEncoder,
@@ -68,6 +71,7 @@ class StaticApiController extends AbstractFOSRestController
         $this->personnelRepository=$personnelRepository;
         $this->doctrine=$entityManager;
         $this->passwordEncoder = $passwordEncoder;
+        $this->activationRepository=$activationRepository;
     }
 
     /**
@@ -186,6 +190,27 @@ class StaticApiController extends AbstractFOSRestController
                 'name' => $card->getName(),
                 'numero' => $card->getNumerocard(),
                 'id' => $card->getId(),
+            ];
+        }
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
+     * @Rest\Get("/v1/activations", name="api_activations_ajax")
+     * @param Request $request
+     * @return Response
+     */
+    public function activations(Request $request): Response
+    {
+        $cards = $this->activationRepository->findAll();
+        $values = [];
+        foreach ($cards as $card) {
+            $values[] = [
+                'name' => $card->getCard()->getName(),
+                'numero' => $card->getCard()->getNumerocard(),
+                'amount' => $card->getAmount(),
+                'monthto' => $card->getMonthto(),
+                'id' => $card->getCard()->getId(),
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);
@@ -324,7 +349,7 @@ class StaticApiController extends AbstractFOSRestController
         ], 200);
     }
     /**
-     * @Rest\Post("/v1/activations", name="api_activations_ajax")
+     * @Rest\Post("/v1/activations", name="api_activations_get_ajax")
      * @param Request $request
      * @return Response
      */
