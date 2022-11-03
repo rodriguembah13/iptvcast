@@ -105,7 +105,7 @@ class IptvApiController extends AbstractFOSRestController
     public function activateCardResponse(Request $request)
     {
        $res = json_decode($request->getContent(), true);
-       $this->logger->error("----------activation ok---------------");
+       $this->logger->info("----------activation ok---------------");
         $data = $res['data'];
         $view = $this->view([], Response::HTTP_OK, []);
         return $this->handleView($view);
