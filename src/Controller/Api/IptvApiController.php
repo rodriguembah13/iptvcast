@@ -89,6 +89,7 @@ class IptvApiController extends AbstractFOSRestController
     {
         $data = $this->cardpendingRepository->findOneByFirst();
         $values = [
+            'id'=>$data->getId(),
             'card_id'=>$data->getCardid(),
             'card_status'=>$data->getCardstatus(),
             'send_or_not'=>$data->getSendornot(),
