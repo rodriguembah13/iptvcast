@@ -102,7 +102,7 @@ class PaymentApiController extends AbstractFOSRestController
     {
         $res = json_decode($request->getContent(), true);
         $data = $res['data'];
-        $produts=$res['bouquets'];
+        $produts=$data['bouquets'];
         $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $reference = "";
         $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
