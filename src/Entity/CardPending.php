@@ -21,6 +21,10 @@ class CardPending
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $cardid;
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $bouquet;
 
     /**
      * @ORM\Column(type="integer")
@@ -106,4 +110,21 @@ class CardPending
 
         return $this;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getBouquet()
+    {
+        return $this->bouquet;
+    }
+
+    /**
+     * @param mixed $bouquet
+     */
+    public function setBouquet($bouquet): void
+    {
+        $this->bouquet = $bouquet;
+    }
+
 }

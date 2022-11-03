@@ -188,8 +188,9 @@ class StaticApiController extends AbstractFOSRestController
             $values[] = [
                 'name' => $bouquet->getDescription(),
                 'numero' => $bouquet->getNumero(),
-                'id' => $bouquet->getId(),
                 'price' => $bouquet->getPrice(),
+                'id' => $bouquet->getId(),
+                'bouquetid' => $bouquet->getBouquetid(),
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);

@@ -55,7 +55,10 @@ class Activation
      */
     private $reference;
 
-
+    /**
+     * @ORM\Column(type="json", nullable=true)
+     */
+    private $bouquets = [];
 
     public function getId(): ?int
     {
@@ -142,6 +145,18 @@ class Activation
     public function setReference(?string $reference): self
     {
         $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getBouquets(): ?array
+    {
+        return $this->bouquets;
+    }
+
+    public function setBouquets(?array $bouquets): self
+    {
+        $this->bouquets = $bouquets;
 
         return $this;
     }

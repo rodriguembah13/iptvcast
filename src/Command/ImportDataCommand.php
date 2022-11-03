@@ -110,13 +110,11 @@ class ImportDataCommand extends Command
             $connectionParams = ['url' => "mysql://iptvcast:iptvcast@10.1.1.195:3306/GOS_CAS?charset=utf8&autoReconnect=true"];
             $this->connection = DriverManager::getConnection($connectionParams, $config);
             $this->dbPrefix = "";
-            $password = 'tvplus';
-            //$users = $this->fetchAllFromImport('AllSendCard');
-            $AllCardStatus=$this->fetchAllFromImport('AllCardStatus');
-            //$bouquets = $this->fetchAllFromImport('bouquets');
-            $io->info(json_encode($AllCardStatus));
+            $AllCardStatus=$this->fetchAllFromImport('ProductInfo');
+            $this->importBouquet($io,$AllCardStatus);
+           // $io->info(json_encode($AllCardStatus));
         } catch (Exception $ex) {
-            $io->error('Failed to load users: ' . $ex->getMessage());
+            $io->error('Failed to load bouquets: ' . $ex->getMessage());
             return 1;
         }
 
@@ -201,17 +199,15 @@ class ImportDataCommand extends Command
     protected function importBouquet(SymfonyStyle $io, $bouquets)
     {
         foreach ($bouquets as $oldbouquet) {
-            $bouquet=$this->bouquetRepository->findOneBy(["bouquetid"=>$oldbouquet['id']]);
+            $bouquet=$this->bouquetRepository->findOneBy(["bouquetid"=>$oldbouquet['ProductInfoID']]);
             if (is_null($bouquet)){
                 $bouquet=new Bouquet();
-                $bouquet->setBouquetid($oldbouquet['id']);
-                $bouquet->setPrice(0.0);
+                $bouquet->setBouquetid($oldbouquet['ProductInfoID']);
+                $bouquet->setNumero($oldbouquet['ProductNum']);
+                $bouquet->setDescription($oldbouquet['Description']);
+                $bouquet->setSmsid($oldbouquet['SMSID']);
                 $this->doctrine->getManager()->persist($bouquet);
             }
-            $bouquet->setName($oldbouquet['bouquet_name']);
-            $bouquet->setChanelids(json_decode($oldbouquet['bouquet_channels'], JSON_FORCE_OBJECT));
-            $bouquet->setSerieids(json_decode($oldbouquet['bouquet_series'], JSON_FORCE_OBJECT));
-            $bouquet->setBouquetorder($oldbouquet['bouquet_order']);
             $this->doctrine->getManager()->flush();
         }
     }

@@ -36,8 +36,8 @@ class EndpointService
             'base_uri' => $params->get('API_URL'),
         ]);
         $config = new Configuration();
-       $connectionParams = ['url' => "mysql://symfony:Symfony123*@localhost:3306/GOS_CAS?charset=utf8&autoReconnect=true"];
-       // $connectionParams = ['url' => "mysql://iptvcast:iptvcast@10.1.1.195:3306/GOS_CAS?charset=utf8&autoReconnect=true"];
+       //$connectionParams = ['url' => "mysql://symfony:Symfony123*@localhost:3306/GOS_CAS?charset=utf8&autoReconnect=true"];
+        $connectionParams = ['url' => "mysql://iptvcast:iptvcast@10.1.1.195:3306/GOS_CAS?charset=utf8&autoReconnect=true"];
         $this->connection = DriverManager::getConnection($connectionParams, $config);
     }
     function getCardStatus($card){
@@ -53,17 +53,10 @@ class EndpointService
         $this->connection->createQueryBuilder()
             ->insert()->values($values)->execute();
     }
-    function activateCard($data){
-        $this->connection->createQueryBuilder()
-            ->update('OldAccredit', 'u')
-            ->andWhere('u.CardID = ?')
-            ->andWhere('u.ProductNumber = ?')
-            ->set('u.CardID', 'u.logins + 1')
-            ->set('u.last_login', '?')
-            ->setParameter(0, $data['cardid'])
-        ;
+    function getAllProduits(){
+        $cardstatus=$this->fetchAllFromImport('ProductInfo');
+        return $cardstatus;
     }
-
     /**
      * @param string $table
      * @param array $where

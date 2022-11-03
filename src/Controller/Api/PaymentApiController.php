@@ -102,6 +102,7 @@ class PaymentApiController extends AbstractFOSRestController
     {
         $res = json_decode($request->getContent(), true);
         $data = $res['data'];
+        $produts=$res['bouquets'];
         $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $reference = "";
         $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -133,7 +134,7 @@ class PaymentApiController extends AbstractFOSRestController
         $response = $client->postfinal("payment_url", $data);
         $this->logger->info($response['response']);
         if ($response['response'] == "success") {
-            $this->createActivate($cardcustomer, $reference, $data['amount']);
+            $this->createActivate($cardcustomer, $reference, $data['amount'],$produts);
             $url = $response["payment_url"];
             $this->logger->info($url);
             $link_array = explode('/', $url);
@@ -152,7 +153,7 @@ class PaymentApiController extends AbstractFOSRestController
             return $this->handleView($view);
         }
     }
-    function createActivate(CardCustomer $card, $reference, $amount)
+    function createActivate(CardCustomer $card, $reference, $amount,$produts)
     {
         $actiavtion = new Activation();
         $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
@@ -162,17 +163,22 @@ class PaymentApiController extends AbstractFOSRestController
         $actiavtion->setMonthto($month);
         $actiavtion->setReference($reference);
         $actiavtion->setStatus(Activation::PENDING);
+        $actiavtion->setBouquets($produts);
         $this->doctrine->persist($actiavtion);
-        $cardpending = new CardPending();
-        $cardpending->setCardid($card->getCard()->getNumerocard());
-        $cardpending->setIsdelete(true);
-        $cardpending->setSendornot(1);
-        $cardpending->setCardstatus(1);
-        $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
-        $mod = "+" . $month . " month";
-        $date_line->modify($mod);
-        $cardpending->setExpiredtime($date_line);
-        $this->doctrine->persist($cardpending);
+        for ($i=0;$i<sizeof($produts);$i++){
+            $cardpending = new CardPending();
+            $cardpending->setCardid($card->getCard()->getNumerocard());
+            $cardpending->setIsdelete(true);
+            $cardpending->setSendornot(1);
+            $cardpending->setCardstatus(1);
+            $cardpending->setBouquet($produts[$i]);
+            $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
+            $mod = "+" . $month . " month";
+            $date_line->modify($mod);
+            $cardpending->setExpiredtime($date_line);
+            $this->doctrine->persist($cardpending);
+        }
+
         $this->doctrine->flush();
     }
 }

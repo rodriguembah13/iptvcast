@@ -77,7 +77,7 @@ class DefaultController extends AbstractController
     public function bouquetchanel(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('name', TextColumn::class,[
+            ->add('description', TextColumn::class,[
                 'label' => 'Name',
             ])
             ->add('price', TextColumn::class, [
@@ -120,7 +120,7 @@ class DefaultController extends AbstractController
      */
     public function bouquetchanel_new(Request $request): Response
     {
-        $data=$this->endpointService->getLiveStreams();
+        $data=[];
         return $this->render('default/bouquetchanel_new.html.twig', [
             'data'=>$data
         ]);
@@ -131,20 +131,20 @@ class DefaultController extends AbstractController
      * @param Bouquet $bouquet
      * @return Response
      */
-    public function bouquetchanel_edit(Bouquet $bouquet): Response
+    public function bouquetchanel_edit(Bouquet $bouquet,Request $request): Response
     {
-         $data=$this->endpointService->getLiveStreams();
-       $arrays_= array_filter($data,function ($item) use($bouquet){
-             if (in_array($item['num'],$bouquet->getChanelids())){
-                 return true;
-             }else{
-                 return false;
-             }
-         });
+         $data=[];
+         if ($request->getMethod()=="POST"){
+             $entityManager = $this->getDoctrine()->getManager();
+             $bouquet->setPrice($request->get('price'));
+             $entityManager->flush();
+             return $this->redirectToRoute('bouquetchanel');
+         }
+
         return $this->render('default/bouquetchanel_edit.html.twig', [
             'data'=>$data,
             'bouquet'=>$bouquet,
-            'chanels'=>$arrays_
+            'chanels'=>[]
         ]);
     }
     /**

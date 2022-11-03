@@ -65,7 +65,7 @@ class IptvApiController extends AbstractFOSRestController
      */
     public function getAllcardstatus()
     {
-        $values = $this->endpointsService->getAllCardStatus();
+        $values = $this->endpointsService->getAllProduits();
 
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
@@ -102,6 +102,7 @@ class IptvApiController extends AbstractFOSRestController
                 'id' => $data->getId(),
                 'card_id' => $data->getCardid(),
                 'card_status' => $data->getCardstatus(),
+                'product_id'=>$data->getBouquet(),
                 'send_or_not' => $data->getSendornot(),
                 'expired_time' => $data->getExpiredtime()->format('Y-m-d h:m:s'),
             ];

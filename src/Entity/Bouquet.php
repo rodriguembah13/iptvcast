@@ -18,9 +18,13 @@ class Bouquet
     private $id;
 
     /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $bouquetid;
+    /**
      * @ORM\Column(type="float", nullable=true)
      */
-    private $price;
+    private $price=0.0;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -31,26 +35,62 @@ class Bouquet
      * @ORM\Column(type="integer", nullable=true)
      */
     private $numero;
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $smsid;
 
+    /**
+     * @return mixed
+     */
+    public function getPrice()
+    {
+        return $this->price;
+    }
 
-
-
+    /**
+     * @param mixed $price
+     */
+    public function setPrice($price): void
+    {
+        $this->price = $price;
+    }
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getPrice(): ?float
+    /**
+     * @return mixed
+     */
+    public function getBouquetid()
     {
-        return $this->price;
+        return $this->bouquetid;
     }
 
-    public function setPrice(?float $price): self
+    /**
+     * @param mixed $bouquetid
+     */
+    public function setBouquetid($bouquetid): void
     {
-        $this->price = $price;
+        $this->bouquetid = $bouquetid;
+    }
 
-        return $this;
+    /**
+     * @return mixed
+     */
+    public function getSmsid()
+    {
+        return $this->smsid;
+    }
+
+    /**
+     * @param mixed $smsid
+     */
+    public function setSmsid($smsid): void
+    {
+        $this->smsid = $smsid;
     }
 
     /**
