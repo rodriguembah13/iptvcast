@@ -106,7 +106,7 @@ class IptvApiController extends AbstractFOSRestController
     {
        $res = json_decode($request->getContent(), true);
        $this->logger->info("----------activation ok---------------");
-        $data = $res['data'];
+        $data = $res;
         $view = $this->view([], Response::HTTP_OK, []);
         return $this->handleView($view);
     }
