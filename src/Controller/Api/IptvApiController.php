@@ -95,13 +95,17 @@ class IptvApiController extends AbstractFOSRestController
     public function activateCard()
     {
         $data = $this->cardpendingRepository->findOneByFirst();
-        $values = [
-            'id' => $data->getId(),
-            'card_id' => $data->getCardid(),
-            'card_status' => $data->getCardstatus(),
-            'send_or_not' => $data->getSendornot(),
-            'expired_time' => $data->getExpiredtime()->format('Y-m-d h:m:s'),
-        ];
+        if (is_null($data)){
+            $values=[];
+        }else{
+            $values = [
+                'id' => $data->getId(),
+                'card_id' => $data->getCardid(),
+                'card_status' => $data->getCardstatus(),
+                'send_or_not' => $data->getSendornot(),
+                'expired_time' => $data->getExpiredtime()->format('Y-m-d h:m:s'),
+            ];
+        }
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
