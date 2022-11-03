@@ -98,4 +98,16 @@ class IptvApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+     /**
+     * @Rest\Post("/v1/reponseactivatecard", name="api_activatecardresponse")
+     * @return Response
+     */
+    public function activateCardResponse(Request $request)
+    {
+       $res = json_decode($request->getContent(), true);
+       $this->logger->error("----------activation ok---------------");
+        $data = $res['data'];
+        $view = $this->view([], Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
 }
