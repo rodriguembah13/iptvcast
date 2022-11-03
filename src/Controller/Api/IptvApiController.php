@@ -105,6 +105,8 @@ class IptvApiController extends AbstractFOSRestController
                 'product_id'=>$data->getBouquet(),
                 'send_or_not' => $data->getSendornot(),
                 'expired_time' => $data->getExpiredtime()->format('Y-m-d h:m:s'),
+                'expired_timestamp'=>date_timestamp_get($data->getExpiredtime()),
+                'begin_timestamp'=>date_timestamp_get(new \DateTime('now',new \DateTimeZone('Africa/Douala')))
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);

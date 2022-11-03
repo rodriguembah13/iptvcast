@@ -173,7 +173,7 @@ class PaymentApiController extends AbstractFOSRestController
             $cardpending->setCardstatus(1);
             $cardpending->setBouquet($produts[$i]);
             $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
-            $mod = "+" . $month . " month";
+            $mod = "+1 month";
             $date_line->modify($mod);
             $cardpending->setExpiredtime($date_line);
             $this->doctrine->persist($cardpending);

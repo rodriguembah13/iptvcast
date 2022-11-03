@@ -382,7 +382,7 @@ class StaticApiController extends AbstractFOSRestController
         $card=new Card();
         $card->setName($data['cardname']);
         $card->setNumerocard($data['cardid']);
-        $card->setAmount($data['amount']);
+        //$card->setAmount($data['amount']);
         $this->doctrine->persist($card);
         $cardcustomer=new CardCustomer();
         $cardcustomer->setCustomer($customer);
