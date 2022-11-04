@@ -118,7 +118,7 @@ class DefaultController extends AbstractController
         ]);
     }
     /**
-     * @Route("/successurl", name="cancelpage")
+     * @Route("/successurl", name="successpage")
      * @param Request $request
      * @return Response
      */
