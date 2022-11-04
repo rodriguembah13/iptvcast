@@ -632,7 +632,7 @@ class DefaultController extends AbstractController
                 'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
                 'last_name' => 'Surname',
                 'public_key' => $this->params->get('PAYMONNEY_KEY'),
-                'logo' => 'https://paymooney.com/images/logo_paymooney2.png',
+                'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
                 'environement' => 'test'
             ];
             $client = new ClientPaymoo();
@@ -691,7 +691,7 @@ class DefaultController extends AbstractController
                 'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
                 'last_name' => 'Surname',
                 'public_key' => $this->params->get('PAYMONNEY_KEY'),
-                'logo' => 'https://paymooney.com/images/logo_paymooney2.png',
+                'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
                 'environement' => 'test'
             ];
             $client = new ClientPaymoo();
