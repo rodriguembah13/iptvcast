@@ -95,7 +95,17 @@ class DefaultController extends AbstractController
             'title'=>"Dashboard"
         ]);
     }
-
+    /**
+     * @Route("/error", name="erropage")
+     * @param Request $request
+     * @return Response
+     */
+    public function echecpage(Request $request): Response
+    {
+        return $this->render('default/error/500.html.twig', [
+            'title'=>"Eroor page"
+        ]);
+    }
     /**
      * @Route("/bouquetchanel", name="bouquetchanel")
      * @param Request $request
@@ -634,6 +644,8 @@ class DefaultController extends AbstractController
                 $this->logger->info($url);
                 $link_array = explode('/', $url);
                 return $this->redirect($url);
+            }else{
+                return $this->redirectToRoute('erropage');
             }
         }
         return $this->render('default/edit/addactivatefromcard.html.twig', [
@@ -691,6 +703,8 @@ class DefaultController extends AbstractController
                 $this->logger->info($url);
                 $link_array = explode('/', $url);
                 return $this->redirect($url);
+            }else{
+                return $this->redirectToRoute('erropage');
             }
         }
 
