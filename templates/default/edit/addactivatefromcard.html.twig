@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Activate card
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <form method="post">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Activate Card for customer: {{ cardcustomer.customer.compte.name }}</h4>
+                    <h5>Card: {{ cardcustomer.card.numerocard }}</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="row mb-3">
+                        <label for="example-select" class="col-sm-3 form-label">Bouquets</label>
+                        <div class="col-sm-7">
+                            <select name="bouquets[]" class="form-select" multiple id="bouquet_select">
+                                {% for bouquet in bouquets %}
+                                    <option data-name="{{ bouquet.price }}" value="{{ bouquet.numero }}">{{ bouquet.description }}-{{ bouquet.price }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-2">
+                            {# <button type="button" id="makeprice" class="btn btn-outline-primary btn-sm">Make amount</button>#}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="exampleInputUsername2" class="col-sm-3 col-form-label">Total</label>
+                        <div class="col-sm-9">
+                            <input disabled type="text" name="amount"  class="form-control" id="amount_card" placeholder="0.0">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="example-select" class="col-sm-3 form-label">Method payment</label>
+                        <div class="col-sm-9">
+                            <select name="method" class="form-select" id="example-select">
+                                <option>Choose method</option>
+                                <option value="mobil_money">Mobile money</option>
+                                <option value="virement">Virement</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="exampleInputEmail2" class="col-sm-3 col-form-label">Phone</label>
+                        <div class="col-sm-9">
+                            <input type="text"  class="form-control" name="phone" id="price_chanel" autocomplete="off"
+                                   placeholder="Phone">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="exampleInputEmail2" class="col-sm-3 col-form-label">Email</label>
+                        <div class="col-sm-9">
+                            <input type="text"  class="form-control" name="address" id="price_chanel" autocomplete="off"
+                                   placeholder="Email">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary me-2" id="submit_chanel">Send</button>
+                    <button class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#amount_card').val(0.0)
+            $('#bouquet_select').change(function () {
+                $.ajax({
+                    url: "{{ path('getpricebouquet_ajax') }}",
+                    type: "GET",
+                    dataType: "JSON",
+                    data: {
+                        bouquets: $('#bouquet_select').val(),
+                    },
+                    success: function (data) {
+                        $('#amount_card').val(data.amount)
+                    },
+                    error: function (err) {
+
+                    }
+                });
+
+            })
+            $('#makeprice').click(function () {
+                $.ajax({
+                    url: "{{ path('getpricebouquet_ajax') }}",
+                    type: "GET",
+                    dataType: "JSON",
+                    data: {
+                        bouquets: $('#bouquet_select').val(),
+                    },
+                    success: function (data) {
+                        $('#amount_card').val(data.amount)
+                    },
+                    error: function (err) {
+
+                    }
+                });
+
+            })
+        })
+    </script>
+{% endblock %}
+
+
+

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Activation;
 use App\Entity\Agence;
 use App\Entity\Bouquet;
+use App\Entity\Card;
 use App\Entity\CardCustomer;
 use App\Entity\CardPending;
 use App\Entity\Customer;
@@ -158,7 +159,7 @@ class DefaultController extends AbstractController
             ->add('id', TwigColumn::class, [
                 'className' => 'buttons',
                 'label' => 'action',
-                'template' => 'default/buttonbar.html.twig',
+                'template' => 'default/buttons/card.html.twig',
                 'render' => function ($value, $context) {
                     return $value;
                 }])
@@ -544,7 +545,23 @@ class DefaultController extends AbstractController
         $data=[];
         if ($request->getMethod()=="POST"){
             $entityManager = $this->getDoctrine()->getManager();
+            $card=new Card();
+            $card->setName($request->get('cardname'));
+            $card->setNumerocard($request->get('cardnumber'));
+            //$card->setAmount($data['amount']);
+            $entityManager->persist($card);
+            $cardcustomer=new CardCustomer();
+            $cardcustomer->setCustomer($customer);
+            $cardcustomer->setCard($card);
+            $cardcustomer->setIsActive(false);
+            $cardcustomer->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
+            $cardcustomer->setPeriodto(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
+            $entityManager->persist($cardcustomer);
             $entityManager->flush();
+            if ($request->get('saveandactivate')){
+                $url = $this->generateUrl('customer_activate_card', ['id' => $cardcustomer->getCustomer()->getId()]);
+                return $this->redirect($url);
+            }
             return $this->redirectToRoute('customers');
         }
 
@@ -573,7 +590,58 @@ class DefaultController extends AbstractController
             'customers'=>$this->customerRepository->findAll()
         ]);
     }
-
+    /**
+     * @Route("/cards/addactivatefromcard/{id}", name="addactivatefromcard")
+     * @return Response
+     */
+    public function addactivatefromcard(CardCustomer $cardcustomer ,Request $request): Response
+    {
+        if ($request->getMethod()=="POST"){
+            $produts=$request->get('bouquets');
+            $this->logger->info(json_encode($produts));
+            $reference = "";
+            $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+            for ($i = 1; $i <= 12; ++$i) {
+                $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
+            }
+            if (strtolower($request->get('method')) == 'mobil_money') {
+                $currency = "XAF";
+            } else {
+                $currency = "USD";
+            }
+            $data = [
+                'amount' => $request->get('amount'),
+                'currency_code' => $currency,
+                'ccode' => 'CM',
+                'lang' => 'en',
+                'item_ref' => $reference,
+                'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
+                'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
+                'email' => 'exemple@email.com',
+                'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
+                'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
+                'last_name' => 'Surname',
+                'public_key' => $this->params->get('PAYMONNEY_KEY'),
+                'logo' => 'https://paymooney.com/images/logo_paymooney2.png',
+                'environement' => 'test'
+            ];
+            $client = new ClientPaymoo();
+            $response = $client->postfinal("payment_url", $data);
+            $this->logger->info(json_encode($response));
+            if ($response['response'] == "success") {
+                $this->createActivate($cardcustomer, $reference, $request->get('amount'),$produts);
+                $url = $response["payment_url"];
+                $this->logger->info($url);
+                $link_array = explode('/', $url);
+                return $this->redirect($url);
+            }
+        }
+        return $this->render('default/edit/addactivatefromcard.html.twig', [
+            'title'=>"Activate card",
+            'cardcustomer'=>$cardcustomer,
+            'bouquets'=>$this->bouquetRepository->findAll()
+        ]);
+    }
     /**
      * @Route("/customers/activatecard/{id}", name="customer_activate_card")
      * @param Customer $customer
