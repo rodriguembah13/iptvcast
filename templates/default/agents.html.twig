@@ -17,6 +17,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             <div class="card-body">
                 <div id="agents">{{ 'loading'|trans({}, 'messages') }}</div>
             </div>
@@ -34,26 +35,27 @@
                     <form method="post" action="{{ path('agent_add') }}">
                         <div class="mb-3">
                             <label for="company" class="form-label">Agence</label>
-                            <input type="text" class="form-control" id="company" placeholder="Enter company">
+                            <select name="agence" class="form-select" id="example-select">
+                            <option>Choose Agence</option>
+                            {% for card in agences %}
+                                <option value="{{ card.id }}">{{ card.name }}</option>
+                            {% endfor %}
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" placeholder="Enter name">
+                            <input type="text" name="name" class="form-control" id="name" placeholder="Enter name">
                         </div>
                         <div class="mb-3">
                             <label for="position" class="form-label">Phone</label>
-                            <input type="text" class="form-control" id="position" placeholder="Enter phone">
-                        </div>
-                        <div class="mb-3">
-                            <label for="company" class="form-label">Password</label>
-                            <input type="text" class="form-control" id="company" placeholder="Enter password">
+                            <input type="text" name="phone" class="form-control" id="position" placeholder="Enter phone">
                         </div>
                         <div class="mb-3">
                             <label for="exampleInputEmail1" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">
+                            <input type="email" name="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">
                         </div>
 
-                        <button type="submit" class="btn btn-light waves-effect waves-light">Save</button>
+                        <button type="submit" class="btn btn-success waves-effect waves-light">Save</button>
                         <button type="button" class="btn btn-danger waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
                     </form>
                 </div>

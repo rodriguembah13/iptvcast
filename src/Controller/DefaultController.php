@@ -11,6 +11,7 @@ use App\Entity\Customer;
 use App\Entity\Personnel;
 use App\Entity\Souscription;
 use App\Entity\User;
+use App\Repository\AgenceRepository;
 use App\Repository\BouquetRepository;
 use App\Repository\CardCustomerRepository;
 use App\Repository\CardRepository;
@@ -34,6 +35,7 @@ use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class DefaultController extends AbstractController
@@ -45,7 +47,9 @@ class DefaultController extends AbstractController
     private $customerRepository;
     private $souscriptionRepository;
     private $cardcustomerRepository;
+    private $agenceRepository;
     private $cardRepository;
+    private $passwordEncoder;
     private $logger;
 
     /**
@@ -56,7 +60,13 @@ class DefaultController extends AbstractController
      * @param DataTableFactory $dataTableFactory
      * @param ParameterBagInterface $parameterBag
      */
-    public function __construct(CardRepository $cardRepository,CardCustomerRepository $cardCustomerRepository,SouscriptionRepository $souscriptionRepository,CustomerRepository $customerRepository,LoggerInterface $logger,BouquetRepository $bouquetRepository,EndpointService $endpointService,DataTableFactory $dataTableFactory,ParameterBagInterface $parameterBag)
+    public function __construct(CardRepository $cardRepository,
+                                CardCustomerRepository $cardCustomerRepository,
+                                SouscriptionRepository $souscriptionRepository,
+                                CustomerRepository $customerRepository,
+                                LoggerInterface $logger,UserPasswordHasherInterface $passwordEncoder,
+                                AgenceRepository $agenceRepository,
+                                BouquetRepository $bouquetRepository,EndpointService $endpointService,DataTableFactory $dataTableFactory,ParameterBagInterface $parameterBag)
     {
         $this->params = $parameterBag;
         $this->dataTableFactory = $dataTableFactory;
@@ -67,6 +77,8 @@ class DefaultController extends AbstractController
         $this->souscriptionRepository=$souscriptionRepository;
         $this->cardcustomerRepository=$cardCustomerRepository;
         $this->cardRepository=$cardRepository;
+        $this->agenceRepository=$agenceRepository;
+        $this->passwordEncoder = $passwordEncoder;
     }
 
     /**
@@ -350,6 +362,7 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/agents.html.twig', [
             'datatable' => $table,
+            'agences'=>$this->agenceRepository->findAll(),
             'title'=>"Agents"
         ]);
     }
@@ -479,11 +492,21 @@ class DefaultController extends AbstractController
         $data=[];
         if ($request->getMethod()=="POST"){
             $entityManager = $this->getDoctrine()->getManager();
+            $agence=$this->agenceRepository->find($request->get('agence'));
             $personnel=new Personnel();
             $compte=new User();
             $compte->setName($request->get('name'));
             $compte->setPhone($request->get('phone'));
             $compte->setEmail($request->get('email'));
+            $compte->setUsername($request->get('email'));
+            $encodedPassword = $this->passwordEncoder->hashPassword($compte, "cast12345");
+            $compte->setRoles(['ROLE_AGENT']);
+            $compte->setPassword($encodedPassword);
+            $entityManager->persist($compte);
+            $personnel->setCompte($compte);
+            $personnel->setAgence($agence);
+            $personnel->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
+            $entityManager->persist($personnel);
             $entityManager->flush();
             return $this->redirectToRoute('agents');
         }
@@ -530,6 +553,24 @@ class DefaultController extends AbstractController
             'cards'=>$this->cardcustomerRepository->findBy(['customer'=>$customer]),
             'title'=>"Add card",
 
+        ]);
+    }
+    /**
+     * @Route("/cards/activate", name="activate_card")
+     * @return Response
+     */
+    public function activatecard(Request $request): Response
+    {
+        $data=[];
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->flush();
+            return $this->redirectToRoute('customers');
+        }
+
+        return $this->render('default/edit/activatecard.html.twig', [
+            'title'=>"Activate card",
+            'customers'=>$this->customerRepository->findAll()
         ]);
     }
 
