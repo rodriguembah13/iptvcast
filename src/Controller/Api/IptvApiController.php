@@ -100,8 +100,10 @@ class IptvApiController extends AbstractFOSRestController
                 'res'=>400
             ];
         }else{
-            $date='2022-11-03 16:59:59';
+            $les=new \DateTime('now',new \DateTimeZone('Africa/Douala'));
+            $date=$les->modify('-1 day')->format('Y-m-d').'16:59:59';
             $now=new \DateTime($date,new \DateTimeZone('Africa/Douala'));
+
             $values = [
                 'res'=>200,
                 'id' => $data->getId(),
@@ -112,7 +114,7 @@ class IptvApiController extends AbstractFOSRestController
                 'expired_time' => $data->getExpiredtime()->format('Y-m-d h:m:s'),
                 'begin_time' => $now->format('Y-m-d h:m:s'),
                 'expired_timestamp'=>date_timestamp_get($data->getExpiredtime()),
-                'begin_timestamp'=>date_timestamp_get(new \DateTime($date,new \DateTimeZone('Africa/Douala')))
+                'begin_timestamp'=>date_timestamp_get($now)
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);
