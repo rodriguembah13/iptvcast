@@ -98,7 +98,8 @@ class IptvApiController extends AbstractFOSRestController
         if (is_null($data)){
             $values=[];
         }else{
-            $now=new \DateTime('now',new \DateTimeZone('Africa/Douala'));
+            $date='2022-11-03 16:59:59';
+            $now=new \DateTime($date,new \DateTimeZone('Africa/Douala'));
             $values = [
                 'id' => $data->getId(),
                 'card_id' => $data->getCardid(),
@@ -106,9 +107,9 @@ class IptvApiController extends AbstractFOSRestController
                 'product_id'=>$data->getBouquet(),
                 'send_or_not' => $data->getSendornot(),
                 'expired_time' => $data->getExpiredtime()->format('Y-m-d h:m:s'),
-                'begin_time' => $now->modify('-1 day')->format('Y-m-d h:m:s'),
+                'begin_time' => $now->format('Y-m-d h:m:s'),
                 'expired_timestamp'=>date_timestamp_get($data->getExpiredtime()),
-                'begin_timestamp'=>date_timestamp_get(new \DateTime('now',new \DateTimeZone('Africa/Douala')))
+                'begin_timestamp'=>date_timestamp_get(new \DateTime($date,new \DateTimeZone('Africa/Douala')))
             ];
         }
         $view = $this->view($values, Response::HTTP_OK, []);
