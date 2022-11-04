@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Add card
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <form method="post">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Add card for customer: {{ customer.compte.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <input id="id_chanel" value="{{ customer.id }}" type="hidden">
+                    <div class="row mb-3">
+                        <label for="exampleInputUsername2" class="col-sm-3 col-form-label">Name</label>
+                        <div class="col-sm-9">
+                            <input  type="text" name="name" class="form-control" id="name_chanel" placeholder="Name">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="exampleInputEmail2" class="col-sm-3 col-form-label">CardNumber</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="phone" id="price_chanel" autocomplete="off"
+                                   placeholder="Price">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary me-2" id="submit_chanel">Save</button>
+                    <button type="submit" class="btn btn-success me-2" id="submit_chanel">Save and activate</button>
+                    <button class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </form>
+        <div class="card">
+            <div class="card-header">
+                <h4>List cards</h4>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Card name</th>
+                        <th>Card Number</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for card in cards %}
+                    <tr>
+                        <td>{{ card.card.name }}</td>
+                        <td>{{ card.card.numerocard }}</td>
+                        <td> <a class="btn btn-danger"><i class="me-2 icon-md fa fa-trash"></i></a></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+{% endblock %}
+
+
+

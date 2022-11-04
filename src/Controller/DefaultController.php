@@ -2,13 +2,22 @@
 
 namespace App\Controller;
 
+use App\Entity\Activation;
+use App\Entity\Agence;
 use App\Entity\Bouquet;
+use App\Entity\CardCustomer;
+use App\Entity\CardPending;
 use App\Entity\Customer;
+use App\Entity\Personnel;
 use App\Entity\Souscription;
+use App\Entity\User;
 use App\Repository\BouquetRepository;
+use App\Repository\CardCustomerRepository;
+use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\SouscriptionRepository;
 use App\Service\EndpointService;
+use App\Service\paiement\ClientPaymoo;
 use DateTime;
 use DateTimeZone;
 use Doctrine\ORM\QueryBuilder;
@@ -35,6 +44,8 @@ class DefaultController extends AbstractController
     private $bouquetRepository;
     private $customerRepository;
     private $souscriptionRepository;
+    private $cardcustomerRepository;
+    private $cardRepository;
     private $logger;
 
     /**
@@ -45,7 +56,7 @@ class DefaultController extends AbstractController
      * @param DataTableFactory $dataTableFactory
      * @param ParameterBagInterface $parameterBag
      */
-    public function __construct(SouscriptionRepository $souscriptionRepository,CustomerRepository $customerRepository,LoggerInterface $logger,BouquetRepository $bouquetRepository,EndpointService $endpointService,DataTableFactory $dataTableFactory,ParameterBagInterface $parameterBag)
+    public function __construct(CardRepository $cardRepository,CardCustomerRepository $cardCustomerRepository,SouscriptionRepository $souscriptionRepository,CustomerRepository $customerRepository,LoggerInterface $logger,BouquetRepository $bouquetRepository,EndpointService $endpointService,DataTableFactory $dataTableFactory,ParameterBagInterface $parameterBag)
     {
         $this->params = $parameterBag;
         $this->dataTableFactory = $dataTableFactory;
@@ -54,6 +65,8 @@ class DefaultController extends AbstractController
         $this->logger=$logger;
         $this->customerRepository=$customerRepository;
         $this->souscriptionRepository=$souscriptionRepository;
+        $this->cardcustomerRepository=$cardCustomerRepository;
+        $this->cardRepository=$cardRepository;
     }
 
     /**
@@ -66,6 +79,7 @@ class DefaultController extends AbstractController
         return $this->render('default/index.html.twig', [
             'league' => '61',
             'date'=>date('Y-m-d'),
+            'title'=>"Dashboard"
         ]);
     }
 
@@ -85,10 +99,6 @@ class DefaultController extends AbstractController
                 'render' => function ($value, $context) {
                     return '<span>' . $value . '</span>';
                 }
-            ])
-            ->add('created', DateTimeColumn::class,[
-                'label' => 'Date ',
-                'format'=>"Y-m-d"
             ])
             ->add('id', TwigColumn::class, [
                 'className' => 'buttons',
@@ -110,7 +120,53 @@ class DefaultController extends AbstractController
             return $table->getResponse();
         }
         return $this->render('default/bouquetchanel.html.twig', [
-            'datatable' => $table
+            'datatable' => $table,
+            'title'=>"Bouquets"
+        ]);
+    }
+    /**
+     * @Route("/cards", name="cards")
+     * @param Request $request
+     * @return Response
+     */
+    public function cards(Request $request): Response
+    {
+        $table = $this->dataTableFactory->create()
+            ->add('description', TextColumn::class,[
+                'label' => 'Name',
+                'field'=>'card.name'
+            ])
+            ->add('numero', TextColumn::class, [
+                'label' => 'CardID',
+                'field'=>'card.numerocard',
+                'render' => function ($value, $context) {
+                    return '<span>' . $value . '</span>';
+                }
+            ])
+            ->add('id', TwigColumn::class, [
+                'className' => 'buttons',
+                'label' => 'action',
+                'template' => 'default/buttonbar.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Bouquet::class,
+                'query' => function (QueryBuilder $builder) {
+                    $builder
+                        ->select('card','customer','card_customer')
+                        ->from(CardCustomer::class, 'card_customer')
+                        ->leftJoin('card_customer.card','card')
+                        ->leftJoin('card_customer.customer','customer')
+                    ;
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
+        }
+        return $this->render('default/cards.html.twig', [
+            'datatable' => $table,
+            'title'=>"Cards"
         ]);
     }
     /**
@@ -122,7 +178,8 @@ class DefaultController extends AbstractController
     {
         $data=[];
         return $this->render('default/bouquetchanel_new.html.twig', [
-            'data'=>$data
+            'data'=>$data,
+            'title'=>"Add ouquets"
         ]);
     }
 
@@ -144,9 +201,11 @@ class DefaultController extends AbstractController
         return $this->render('default/bouquetchanel_edit.html.twig', [
             'data'=>$data,
             'bouquet'=>$bouquet,
+            'title'=>"Edit Bouquets",
             'chanels'=>[]
         ]);
     }
+
     /**
      * @Route("/souscriptions", name="souscriptions")
      */
@@ -205,7 +264,8 @@ class DefaultController extends AbstractController
             return $table->getResponse();
         }
         return $this->render('default/souscriptions.html.twig', [
-            'datatable' => $table
+            'datatable' => $table,
+            'title'=>"Activations"
         ]);
     }
     /**
@@ -225,12 +285,13 @@ class DefaultController extends AbstractController
             ->add('phone', TextColumn::class,[
                 'label' => 'Phone',
             ])
-
-            ->add('datevalidite', DateTimeColumn::class,[
-                'label' => 'Date Expiration',
-                'field'=>'customer.expiredAt',
-                'format'=>"Y-m-d"
-            ])
+            ->add('id', TwigColumn::class, [
+                'className' => 'buttons',
+                'label' => 'action',
+                'template' => 'default/buttons/customer.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
             ->createAdapter(ORMAdapter::class, [
                 'entity' => Souscription::class,
                 'query' => function (QueryBuilder $builder) {
@@ -245,57 +306,338 @@ class DefaultController extends AbstractController
             return $table->getResponse();
         }
         return $this->render('default/customers.html.twig', [
-            'datatable' => $table
+            'datatable' => $table,
+            'title'=>"Customers"
         ]);
     }
     /**
-     * @Route("/post/savechanels", name="savechanels", methods={"GET","POST"})
-     *
+     * @Route("/agents", name="agents")
      */
-    public function postChanels(Request $request): JsonResponse
+    public function agents(Request $request): Response
     {
-        $chs=$request->get('chanels');
-        $chanels=[];
-        for ($i = 0; $i < sizeof($chs); ++$i) {
-            array_push($chanels,$chs[$i]['id']);
-        }
-        $entityManager = $this->getDoctrine()->getManager();
-        if (is_null($request->get('id'))){
-            $bouquet=new Bouquet();
-            $bouquet->setIsactive(true);
-            $entityManager->persist($bouquet);
-        }else{
-            $bouquet=$this->bouquetRepository->find($request->get('id'));
+        $table = $this->dataTableFactory->create()
+            ->add('agent', TextColumn::class,[
+                'label' => 'Name',
+                'field'=>'compte.name'
+            ])
+            ->add('email', TextColumn::class,[
+                'label' => 'Email',
+                'field'=>'compte.email'
+            ])
+            ->add('phone', TextColumn::class,[
+                'label' => 'Phone',
+            ])
 
+            ->add('id', TwigColumn::class, [
+                'className' => 'buttons',
+                'label' => 'action',
+                'template' => 'default/buttons/agent.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Souscription::class,
+                'query' => function (QueryBuilder $builder) {
+                    $builder
+                        ->select('compte','customer')
+                        ->from(Personnel::class, 'customer')
+                        ->join('customer.compte', 'compte')
+                    ;
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
         }
-       // $bouquet->setName($request->get('name'));
-        $bouquet->setPrice($request->get('price'));
-       // $bouquet->setChanelids($chanels);
-        $entityManager->flush();
-        return new JsonResponse(["id" => $chanels], 200);
+        return $this->render('default/agents.html.twig', [
+            'datatable' => $table,
+            'title'=>"Agents"
+        ]);
     }
     /**
-     * @Route("/notifyurlflutter/ajax", name="notifyurlflutterajax", methods={"POST","GET"})
+     * @Route("/agences", name="agences")
      */
-    public function notifyurlflutter(Request $request)
+    public function agences(Request $request): Response
     {
-        $this->logger->error("----------------------- notify call");
-        $data=json_decode($request->getContent(), true);
-        $this->logger->error("----------------------- notify call". $request->get('customer'));
-        if (!empty($request->get('status'))) {
-            $status = $request->get('status');
-            $customer_ = $this->customerRepository->find($request->get('customer'));
-            $souscription_ = $this->souscriptionRepository->findOneBy(['reference'=>$request->get('ref')]);
-            if ($souscription_->getStatus() == "PENDING") {
-                if ($status == "successful") {
-                 //   $this->updateVote($vote_, 'ACCEPTED');
-                } elseif ($status == "cancelled") {
-                  //  $this->updateVote($vote_, 'REFUSED');
-                }
-            }
-        }else{
-            $status = $request->get('status');
+        $table = $this->dataTableFactory->create()
+            ->add('agence', TextColumn::class,[
+                'label' => 'Name',
+                'field'=>'agence.name'
+            ])
+            ->add('phone', TextColumn::class,[
+                'label' => 'Phone',
+            ])
+            ->add('address', TextColumn::class,[
+                'label' => 'Address',
+            ])
+            ->add('city', TextColumn::class,[
+                'label' => 'City',
+            ])
+            ->add('id', TwigColumn::class, [
+                'className' => 'buttons',
+                'label' => 'action',
+                'template' => 'default/buttons/agence.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Agence::class,
+                'query' => function (QueryBuilder $builder) {
+                    $builder
+                        ->select('agence')
+                        ->from(Agence::class, 'agence')
+                    ;
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
         }
-        return $this->redirectToRoute('home');
+        return $this->render('default/agences.html.twig', [
+            'datatable' => $table,
+            'title'=>"Agences"
+        ]);
+    }
+    /**
+     * @Route("/customer/edit/{id}", name="customer_edit")
+     * @param Customer $bouquet
+     * @return Response
+     */
+    public function customer_edit(Customer $customer,Request $request): Response
+    {
+        $data=[];
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $customer->setCity($request->get('city'));
+            $customer->setAddress($request->get('city'));
+            $customer->setCity($request->get('city'));
+            $customer->setCity($request->get('city'));
+            $entityManager->flush();
+            return $this->redirectToRoute('customers');
+        }
+
+        return $this->render('default/edit/editcustomer.html.twig', [
+            'data'=>$data,
+            'customer'=>$customer,
+            'title'=>"Edit Customers",
+            'chanels'=>[]
+        ]);
+    }
+    /**
+     * @Route("/agences/edit/{id}", name="agence_edit")
+     * @param Customer $bouquet
+     * @return Response
+     */
+    public function agence_edit(Agence $agence,Request $request): Response
+    {
+        $data=[];
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $agence->setCity($request->get('city'));
+            $agence->setAddress($request->get('city'));
+            $agence->setCity($request->get('city'));
+            $agence->setCity($request->get('city'));
+            $entityManager->flush();
+            return $this->redirectToRoute('agences');
+        }
+
+        return $this->render('default/edit/editagence.html.twig', [
+            'agence'=>$agence,
+            'title'=>"Edit Agences",
+
+        ]);
+    }
+    /**
+     * @Route("/agents/edit/{id}", name="agent_edit")
+     * @param Customer $bouquet
+     * @return Response
+     */
+    public function agent_edit(Personnel $personnel,Request $request): Response
+    {
+        $data=[];
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $compte=$personnel->getCompte();
+            $compte->setName($request->get('name'));
+            $compte->setPhone($request->get('phone'));
+            $compte->setEmail($request->get('email'));
+            $entityManager->flush();
+            return $this->redirectToRoute('agents');
+        }
+
+        return $this->render('default/edit/editagent.html.twig', [
+            'agent'=>$personnel,
+            'title'=>"Edit Agents",
+
+        ]);
+    }
+    /**
+     * @Route("/agents/add", name="agent_add")
+     * @param Customer $bouquet
+     * @return Response
+     */
+    public function agent_add(Request $request): Response
+    {
+        $data=[];
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $personnel=new Personnel();
+            $compte=new User();
+            $compte->setName($request->get('name'));
+            $compte->setPhone($request->get('phone'));
+            $compte->setEmail($request->get('email'));
+            $entityManager->flush();
+            return $this->redirectToRoute('agents');
+        }
+        return $this->redirectToRoute('agents');
+    }
+
+    /**
+     * @Route("/agences/add", name="agence_add")
+     * @param Request $request
+     * @return Response
+     */
+    public function agence_add(Request $request): Response
+    {
+        $data=[];
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $agence=new Agence();
+            $agence->setName($request->get('name'));
+            $agence->setPhone($request->get('phone'));
+            $agence->setAddress($request->get('address'));
+            $agence->setCity($request->get('city'));
+            $entityManager->persist($agence);
+            $entityManager->flush();
+            return $this->redirectToRoute('agences');
+        }
+        return $this->redirectToRoute('agences');
+    }
+    /**
+     * @Route("/customers/addcard/{id}", name="customer_add_card")
+     * @param Customer $bouquet
+     * @return Response
+     */
+    public function customer_add_card(Customer $customer,Request $request): Response
+    {
+        $data=[];
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->flush();
+            return $this->redirectToRoute('customers');
+        }
+
+        return $this->render('default/edit/addcardcustomer.html.twig', [
+            'customer'=>$customer,
+            'cards'=>$this->cardcustomerRepository->findBy(['customer'=>$customer]),
+            'title'=>"Add card",
+
+        ]);
+    }
+
+    /**
+     * @Route("/customers/activatecard/{id}", name="customer_activate_card")
+     * @param Customer $customer
+     * @param Request $request
+     * @return Response
+     */
+    public function customer_activate_card(Customer $customer,Request $request): Response
+    {
+        $data=[];
+
+        if ($request->getMethod()=="POST"){
+            $produts=$request->get('bouquets');
+            $this->logger->info(json_encode($produts));
+            $cardcustomer = $this->cardcustomerRepository->find($request->get('cardcustomer'));
+            $reference = "";
+            $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+            for ($i = 1; $i <= 12; ++$i) {
+                $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
+            }
+            if (strtolower($request->get('method')) == 'mobil_money') {
+                $currency = "XAF";
+            } else {
+                $currency = "USD";
+            }
+            $data = [
+                'amount' => $request->get('amount'),
+                'currency_code' => $currency,
+                'ccode' => 'CM',
+                'lang' => 'en',
+                'item_ref' => $reference,
+                'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
+                'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
+                'email' => 'exemple@email.com',
+                'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
+                'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
+                'last_name' => 'Surname',
+                'public_key' => $this->params->get('PAYMONNEY_KEY'),
+                'logo' => 'https://paymooney.com/images/logo_paymooney2.png',
+                'environement' => 'test'
+            ];
+            $client = new ClientPaymoo();
+            $response = $client->postfinal("payment_url", $data);
+            $this->logger->info($response['response']);
+            if ($response['response'] == "success") {
+                $this->createActivate($cardcustomer, $reference, $request->get('amount'),$produts);
+                $url = $response["payment_url"];
+                $this->logger->info($url);
+                $link_array = explode('/', $url);
+                return $this->redirect($url);
+            }
+        }
+
+        return $this->render('default/edit/activatecardcustomer.html.twig', [
+            'customer'=>$customer,
+            'cards'=>$this->cardcustomerRepository->findAll(),
+            'bouquets'=>$this->bouquetRepository->findAll(),
+            'title'=>"Activate card",
+
+        ]);
+    }
+    function createActivate(CardCustomer $card, $reference, $amount,$produts)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $actiavtion = new Activation();
+        $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+        $actiavtion->setCard($card->getCard());
+        $actiavtion->setAmount($amount);
+        $month = intdiv($amount, $card->getCard()->getAmount());
+        $actiavtion->setMonthto($month);
+        $actiavtion->setReference($reference);
+        $actiavtion->setStatus(Activation::PENDING);
+        $actiavtion->setBouquets($produts);
+        $entityManager->persist($actiavtion);
+        for ($i=0;$i<sizeof($produts);$i++){
+            $cardpending = new CardPending();
+            $cardpending->setCardid($card->getCard()->getNumerocard());
+            $cardpending->setIsdelete(true);
+            $cardpending->setSendornot(1);
+            $cardpending->setCardstatus(1);
+            $cardpending->setBouquet($produts[$i]);
+            $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
+            $mod = "+1 month";
+            $date_line->modify($mod);
+            $cardpending->setExpiredtime($date_line);
+            $entityManager->persist($cardpending);
+        }
+
+        $entityManager->flush();
+    }
+    /**
+     * @Route("/getpricebouquet/ajax", name="getpricebouquet_ajax", methods={"GET"})
+     */
+    public function getcandidatAjax(Request $request): JsonResponse
+    {
+        $bqts=$request->get('bouquets');
+        $amount=0.0;
+        for ($i=0;$i<count($bqts);$i++){
+            $bq=$this->bouquetRepository->findOneBy(['numero'=>$bqts[$i]]);
+            $amount+=$bq->getPrice();
+
+        }
+        $data = [
+            'amount' => $amount,
+        ];
+
+        return new JsonResponse($data, 200);
     }
 }

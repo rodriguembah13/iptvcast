@@ -1,0 +1,37 @@
+{#<div class="btn-group btn-group-sm float-end">
+    <a class="btn btn-success" href="{{ path('customer_edit', {'id': row.id}) }}"><i class="me-2 icon-md fa fa-edit"></i></a>
+    <a class="btn btn-outline-warning" href="{{ path('customer_edit', {'id': row.id}) }}"><i class="me-2 icon-md fa fa-shopping-basket"></i></a>
+    <a class="btn btn-danger"><i class="me-2 icon-md fa fa-trash"></i></a>
+
+</div>#}
+<div class="dropdown notification-list topbar-dropdown">
+    <a class="btn btn-success dropdown-toggle nav-user me-0 waves-effect waves-light" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+        <i class="me-2 icon-md fa fa-arrow-down"></i>
+    </a>
+    <div class="dropdown-menu dropdown-menu-end profile-dropdown ">
+             <!-- item-->
+        <a href="{{ path('customer_edit', {'id': row.id}) }}" class="dropdown-item notify-item">
+            <i class="fa fa-edit"></i>
+            <span>Edit</span>
+        </a>
+
+        <!-- item-->
+        <a href="{{ path('customer_add_card', {'id': row.id}) }}" class="dropdown-item notify-item">
+            <i class="fa fa-sim-card"></i>
+            <span>Add card</span>
+        </a>
+        <!-- item-->
+        <a href="{{ path('customer_activate_card', {'id': row.id}) }}" class="dropdown-item notify-item">
+            <i class="fa fa-check-square"></i>
+            <span>Activate card</span>
+        </a>
+        <div class="dropdown-divider"></div>
+
+        <!-- item-->
+        <a href="#" class="dropdown-item notify-item">
+            <i class="fe-log-out"></i>
+            <span>Delete</span>
+        </a>
+
+    </div>
+</div>

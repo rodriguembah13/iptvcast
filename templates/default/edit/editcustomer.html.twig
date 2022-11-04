@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Edit customer
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <form method="post">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Modify Customer: {{ customer.compte.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <input id="id_chanel" value="{{ customer.id }}" type="hidden">
+                    <div class="row mb-3">
+                        <label for="exampleInputUsername2" class="col-sm-3 col-form-label">Name</label>
+                        <div class="col-sm-9">
+                            <input  type="text" name="name" value="{{ customer.compte.name }}" class="form-control" id="name_chanel" placeholder="Name">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="exampleInputEmail2" class="col-sm-3 col-form-label">Phone</label>
+                        <div class="col-sm-9">
+                            <input type="text" value="{{ customer.compte.phone }}" class="form-control" name="phone" id="price_chanel" autocomplete="off"
+                                   placeholder="Price">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary me-2" id="submit_chanel">Submit</button>
+                    <button class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+{% endblock %}
+
+
