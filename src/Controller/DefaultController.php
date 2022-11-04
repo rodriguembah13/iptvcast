@@ -107,6 +107,28 @@ class DefaultController extends AbstractController
         ]);
     }
     /**
+     * @Route("/cancelurl", name="cancelpage")
+     * @param Request $request
+     * @return Response
+     */
+    public function cancelpage(Request $request): Response
+    {
+        return $this->render('default/error/500.html.twig', [
+            'title'=>"Eroor page"
+        ]);
+    }
+    /**
+     * @Route("/successurl", name="cancelpage")
+     * @param Request $request
+     * @return Response
+     */
+    public function successpage(Request $request): Response
+    {
+        return $this->render('default/error/200.html.twig', [
+            'title'=>"Success page"
+        ]);
+    }
+    /**
      * @Route("/bouquetchanel", name="bouquetchanel")
      * @param Request $request
      * @return Response
