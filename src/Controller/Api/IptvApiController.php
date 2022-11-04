@@ -96,11 +96,14 @@ class IptvApiController extends AbstractFOSRestController
     {
         $data = $this->cardpendingRepository->findOneByFirst();
         if (is_null($data)){
-            $values=[];
+            $values=[
+                'res'=>400
+            ];
         }else{
             $date='2022-11-03 16:59:59';
             $now=new \DateTime($date,new \DateTimeZone('Africa/Douala'));
             $values = [
+                'res'=>200,
                 'id' => $data->getId(),
                 'card_id' => $data->getCardid(),
                 'card_status' => $data->getCardstatus(),
