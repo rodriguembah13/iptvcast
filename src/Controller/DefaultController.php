@@ -267,7 +267,7 @@ class DefaultController extends AbstractController
             ])
             ->add('card', TextColumn::class, [
                 'label' => 'N° card',
-                'field' => 'card.name'
+                'field' => 'card.numerocard'
             ])
             ->add('amount', TextColumn::class, [
                 'label' => 'Montant',
@@ -303,7 +303,8 @@ class DefaultController extends AbstractController
                         ->from(Activation::class, 'souscription')
                         ->andWhere('souscription.status = :satus')
                         ->setParameter('satus',Activation::SUCCESS)
-                        ->join('souscription.card', 'card');
+                        ->join('souscription.card', 'card')
+                        ->orderBy('souscription.id', 'DESC');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -363,7 +364,8 @@ class DefaultController extends AbstractController
                         ->from(Activation::class, 'souscription')
                         ->andWhere('souscription.status <> :satus')
                         ->setParameter('satus',Activation::SUCCESS)
-                        ->join('souscription.card', 'card');
+                        ->join('souscription.card', 'card')
+                        ->orderBy('souscription.id', 'DESC');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
