@@ -10,6 +10,9 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class CardPending
 {
+    public const PENDING="PENDING";
+    public const ECHEC="ECHEC";
+    public const SUCCESS="SUCCESS";
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -45,7 +48,15 @@ class CardPending
      * @ORM\Column(type="boolean")
      */
     private $isdelete;
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $status=self::PENDING;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $activation;
     public function getId(): ?int
     {
         return $this->id;
@@ -125,6 +136,34 @@ class CardPending
     public function setBouquet($bouquet): void
     {
         $this->bouquet = $bouquet;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param string $status
+     */
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getActivation(): ?int
+    {
+        return $this->activation;
+    }
+
+    public function setActivation(?int $activation): self
+    {
+        $this->activation = $activation;
+
+        return $this;
     }
 
 }

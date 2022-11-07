@@ -42,7 +42,9 @@ class CardPendingRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('s')
             ->andWhere('s.isdelete = 1')
+            ->andWhere('s.status = :status')
             ->setMaxResults(1)
+            ->setParameter('status',CardPending::PENDING)
             ->orderBy('s.id', 'ASC')
             ->getQuery()
             ->getOneOrNullResult()

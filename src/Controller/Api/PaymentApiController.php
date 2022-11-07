@@ -12,6 +12,7 @@ use App\Entity\Souscription;
 use App\Repository\ActivationRepository;
 use App\Repository\BouquetRepository;
 use App\Repository\CardCustomerRepository;
+use App\Repository\CardPendingRepository;
 use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
@@ -39,6 +40,7 @@ class PaymentApiController extends AbstractFOSRestController
     private $cardRepository;
     private $cardcustomerRepository;
     private $activationRepository;
+    private $cardpendingRepository;
 
     /**
      * PaymentApiController constructor.
@@ -56,6 +58,7 @@ class PaymentApiController extends AbstractFOSRestController
                                 FlutterwaveService $flutterwaveService,
                                 UserRepository $userRepository, ParameterBagInterface $params,
                                 BouquetRepository $bouquetRepository,
+                                CardPendingRepository $cardPendingRepository,
                                 LoggerInterface $logger, CardCustomerRepository $cardCustomerRepository, ActivationRepository $activationRepository,
                                 CustomerRepository $customerRepository,
                                 EntityManagerInterface $entityManager)
@@ -69,6 +72,7 @@ class PaymentApiController extends AbstractFOSRestController
         $this->cardRepository = $cardRepository;
         $this->cardcustomerRepository = $cardCustomerRepository;
         $this->activationRepository = $activationRepository;
+        $this->cardpendingRepository=$cardPendingRepository;
         $this->params = $params;
     }
 
@@ -84,10 +88,14 @@ class PaymentApiController extends AbstractFOSRestController
         $this->logger->error($reference);
         $statusbool = $_POST['status'];
         $activation=$this->activationRepository->findOneBy(['reference'=>$reference,'status'=>Activation::PENDING]);
+        $cardpending=$this->cardpendingRepository->findOneBy(['activation'=>$activation->getId()]);
         if ($statusbool == "Success") {
           $activation->setStatus(Activation::SUCCESS);
+          $cardpending->setStatus(CardPending::SUCCESS);
         }else{
             $activation->setStatus(Activation::ECHEC);
+            $cardpending->setStatus(CardPending::ECHEC);
+            $this->doctrine->remove($cardpending);
         }
         $this->doctrine->flush();
         return new JsonResponse([], 200);
@@ -171,6 +179,8 @@ class PaymentApiController extends AbstractFOSRestController
             $cardpending->setIsdelete(true);
             $cardpending->setSendornot(1);
             $cardpending->setCardstatus(1);
+            $cardpending->setStatus(CardPending::PENDING);
+            $cardpending->setActivation($actiavtion->getId());
             $cardpending->setBouquet($produts[$i]);
             $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
             $mod = "+1 month";

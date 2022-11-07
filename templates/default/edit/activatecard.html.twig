@@ -13,7 +13,7 @@
                     <div class="row mb-3">
                         <label for="example-select" class="col-sm-3 form-label">Customers</label>
                         <div class="col-sm-9">
-                            <select name="cardcustomer" class="form-select" id="example-select">
+                            <select name="customer" class="form-select" id="customer_select">
                                 <option>Choose Customer</option>
                                 {% for card in customers %}
                                     <option value="{{ card.id }}">{{ card.compte.name }}</option>
@@ -24,8 +24,8 @@
                     <div class="row mb-3">
                         <label for="example-select" class="col-sm-3 form-label">Card</label>
                         <div class="col-sm-9">
-                            <select name="cardcustomer" class="form-select" id="example-select">
-                                <option>Choose card</option>
+                            <select name="cardcustomer" class="form-select" id="cardcustomer">
+
                                 {#{% for card in cards %}
                                     <option value="{{ card.id }}">{{ card.card.numerocard }}</option>
                                 {% endfor %}#}
@@ -36,9 +36,9 @@
                         <label for="example-select" class="col-sm-3 form-label">Bouquets</label>
                         <div class="col-sm-7">
                             <select name="bouquets[]" class="form-select" multiple id="bouquet_select">
-                              {#  {% for bouquet in bouquets %}
+                                {% for bouquet in bouquets %}
                                     <option data-name="{{ bouquet.price }}" value="{{ bouquet.numero }}">{{ bouquet.description }}-{{ bouquet.price }}</option>
-                                {% endfor %}#}
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-sm-2">
@@ -48,7 +48,7 @@
                     <div class="row mb-3">
                         <label for="exampleInputUsername2" class="col-sm-3 col-form-label">Total</label>
                         <div class="col-sm-9">
-                            <input disabled type="text" name="amount"  class="form-control" id="amount_card" placeholder="0.0">
+                            <input required readonly type="text" name="amount"  class="form-control" id="amount_card" placeholder="0.0">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -91,6 +91,27 @@
     <script>
         $(function () {
             $('#amount_card').val(0.0)
+            $("#customer_select").change(function () {
+                $.ajax({
+                    url: "{{ path('getcardcustomer_ajax') }}",
+                    type: "GET",
+                    dataType: "JSON",
+                    data: {
+                        customer: $(this).val(),
+                    },
+                    success: function (data) {
+                        $('#cardcustomer').html('');
+                        $('#cardcustomer').append('<option>Choose card</option>')
+                        for (let i = 0; i < data.length; i++) {
+                            $('#cardcustomer').append('<option value="'+data[i].id+'">'+data[i].numero+'</option>')
+
+                        }
+                    },
+                    error: function (err) {
+
+                    }
+                });
+            })
             $('#bouquet_select').change(function () {
                 $.ajax({
                     url: "{{ path('getpricebouquet_ajax') }}",

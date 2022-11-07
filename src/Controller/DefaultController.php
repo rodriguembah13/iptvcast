@@ -65,20 +65,20 @@ class DefaultController extends AbstractController
                                 CardCustomerRepository $cardCustomerRepository,
                                 SouscriptionRepository $souscriptionRepository,
                                 CustomerRepository $customerRepository,
-                                LoggerInterface $logger,UserPasswordHasherInterface $passwordEncoder,
+                                LoggerInterface $logger, UserPasswordHasherInterface $passwordEncoder,
                                 AgenceRepository $agenceRepository,
-                                BouquetRepository $bouquetRepository,EndpointService $endpointService,DataTableFactory $dataTableFactory,ParameterBagInterface $parameterBag)
+                                BouquetRepository $bouquetRepository, EndpointService $endpointService, DataTableFactory $dataTableFactory, ParameterBagInterface $parameterBag)
     {
         $this->params = $parameterBag;
         $this->dataTableFactory = $dataTableFactory;
-        $this->endpointService=$endpointService;
-        $this->bouquetRepository=$bouquetRepository;
-        $this->logger=$logger;
-        $this->customerRepository=$customerRepository;
-        $this->souscriptionRepository=$souscriptionRepository;
-        $this->cardcustomerRepository=$cardCustomerRepository;
-        $this->cardRepository=$cardRepository;
-        $this->agenceRepository=$agenceRepository;
+        $this->endpointService = $endpointService;
+        $this->bouquetRepository = $bouquetRepository;
+        $this->logger = $logger;
+        $this->customerRepository = $customerRepository;
+        $this->souscriptionRepository = $souscriptionRepository;
+        $this->cardcustomerRepository = $cardCustomerRepository;
+        $this->cardRepository = $cardRepository;
+        $this->agenceRepository = $agenceRepository;
         $this->passwordEncoder = $passwordEncoder;
     }
 
@@ -91,10 +91,11 @@ class DefaultController extends AbstractController
     {
         return $this->render('default/index.html.twig', [
             'league' => '61',
-            'date'=>date('Y-m-d'),
-            'title'=>"Dashboard"
+            'date' => date('Y-m-d'),
+            'title' => "Dashboard"
         ]);
     }
+
     /**
      * @Route("/error", name="erropage")
      * @param Request $request
@@ -103,9 +104,10 @@ class DefaultController extends AbstractController
     public function echecpage(Request $request): Response
     {
         return $this->render('default/error/500.html.twig', [
-            'title'=>"Eroor page"
+            'title' => "Eroor page"
         ]);
     }
+
     /**
      * @Route("/cancelurl", name="cancelpage")
      * @param Request $request
@@ -114,9 +116,10 @@ class DefaultController extends AbstractController
     public function cancelpage(Request $request): Response
     {
         return $this->render('default/error/500.html.twig', [
-            'title'=>"Eroor page"
+            'title' => "Eroor page"
         ]);
     }
+
     /**
      * @Route("/successurl", name="successpage")
      * @param Request $request
@@ -125,9 +128,10 @@ class DefaultController extends AbstractController
     public function successpage(Request $request): Response
     {
         return $this->render('default/error/200.html.twig', [
-            'title'=>"Success page"
+            'title' => "Success page"
         ]);
     }
+
     /**
      * @Route("/bouquetchanel", name="bouquetchanel")
      * @param Request $request
@@ -136,7 +140,7 @@ class DefaultController extends AbstractController
     public function bouquetchanel(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('description', TextColumn::class,[
+            ->add('description', TextColumn::class, [
                 'label' => 'Name',
             ])
             ->add('price', TextColumn::class, [
@@ -157,8 +161,7 @@ class DefaultController extends AbstractController
                 'query' => function (QueryBuilder $builder) {
                     $builder
                         ->select('bouquet')
-                        ->from(Bouquet::class, 'bouquet')
-                    ;
+                        ->from(Bouquet::class, 'bouquet');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -166,9 +169,10 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/bouquetchanel.html.twig', [
             'datatable' => $table,
-            'title'=>"Bouquets"
+            'title' => "Bouquets"
         ]);
     }
+
     /**
      * @Route("/cards", name="cards")
      * @param Request $request
@@ -177,13 +181,13 @@ class DefaultController extends AbstractController
     public function cards(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('description', TextColumn::class,[
+            ->add('description', TextColumn::class, [
                 'label' => 'Name',
-                'field'=>'card.name'
+                'field' => 'card.name'
             ])
             ->add('numero', TextColumn::class, [
                 'label' => 'CardID',
-                'field'=>'card.numerocard',
+                'field' => 'card.numerocard',
                 'render' => function ($value, $context) {
                     return '<span>' . $value . '</span>';
                 }
@@ -199,11 +203,10 @@ class DefaultController extends AbstractController
                 'entity' => Bouquet::class,
                 'query' => function (QueryBuilder $builder) {
                     $builder
-                        ->select('card','customer','card_customer')
+                        ->select('card', 'customer', 'card_customer')
                         ->from(CardCustomer::class, 'card_customer')
-                        ->leftJoin('card_customer.card','card')
-                        ->leftJoin('card_customer.customer','customer')
-                    ;
+                        ->leftJoin('card_customer.card', 'card')
+                        ->leftJoin('card_customer.customer', 'customer');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -211,9 +214,10 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/cards.html.twig', [
             'datatable' => $table,
-            'title'=>"Cards"
+            'title' => "Cards"
         ]);
     }
+
     /**
      * @Route("/bouquetchanel/create", name="bouquetchanel_new")
      * @param Request $request
@@ -221,10 +225,10 @@ class DefaultController extends AbstractController
      */
     public function bouquetchanel_new(Request $request): Response
     {
-        $data=[];
+        $data = [];
         return $this->render('default/bouquetchanel_new.html.twig', [
-            'data'=>$data,
-            'title'=>"Add ouquets"
+            'data' => $data,
+            'title' => "Add ouquets"
         ]);
     }
 
@@ -233,21 +237,21 @@ class DefaultController extends AbstractController
      * @param Bouquet $bouquet
      * @return Response
      */
-    public function bouquetchanel_edit(Bouquet $bouquet,Request $request): Response
+    public function bouquetchanel_edit(Bouquet $bouquet, Request $request): Response
     {
-         $data=[];
-         if ($request->getMethod()=="POST"){
-             $entityManager = $this->getDoctrine()->getManager();
-             $bouquet->setPrice($request->get('price'));
-             $entityManager->flush();
-             return $this->redirectToRoute('bouquetchanel');
-         }
+        $data = [];
+        if ($request->getMethod() == "POST") {
+            $entityManager = $this->getDoctrine()->getManager();
+            $bouquet->setPrice($request->get('price'));
+            $entityManager->flush();
+            return $this->redirectToRoute('bouquetchanel');
+        }
 
         return $this->render('default/bouquetchanel_edit.html.twig', [
-            'data'=>$data,
-            'bouquet'=>$bouquet,
-            'title'=>"Edit Bouquets",
-            'chanels'=>[]
+            'data' => $data,
+            'bouquet' => $bouquet,
+            'title' => "Edit Bouquets",
+            'chanels' => []
         ]);
     }
 
@@ -257,9 +261,9 @@ class DefaultController extends AbstractController
     public function souscriptions(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('datecreation', DateTimeColumn::class,[
+            ->add('datecreation', DateTimeColumn::class, [
                 'label' => 'Date ',
-                'format'=>"Y-m-d"
+                'format' => "Y-m-d"
             ])
             ->add('amount', TextColumn::class, [
                 'label' => 'Montant',
@@ -267,42 +271,40 @@ class DefaultController extends AbstractController
                     return '<span>' . $value . '</span>';
                 }
             ])
-            ->add('customer', TextColumn::class,[
+            ->add('customer', TextColumn::class, [
                 'label' => 'Nom du client',
-                'field'=>'compte.name'
+                'field' => 'compte.name'
             ])
-            ->add('email', TextColumn::class,[
+            ->add('email', TextColumn::class, [
                 'label' => 'Email du client',
-                'field'=>'compte.email'
+                'field' => 'compte.email'
             ])
-            ->add('datevalidite', DateTimeColumn::class,[
+            ->add('datevalidite', DateTimeColumn::class, [
                 'label' => 'Date Expiration',
-                'field'=>'customer.expiredAt',
-                'format'=>"Y-m-d"
+                'field' => 'customer.expiredAt',
+                'format' => "Y-m-d"
             ])
             ->add('statut', TextColumn::class, [
                 'className' => 'buttons',
                 'label' => 'status',
                 // 'template' => 'user/status.html.twig',
                 'render' => function ($value, $context) {
-                    if($value== Souscription::ACCEPTED){
-                        return '<a class="btn btn-sm btn-success">'.$value.'</a>';
-                    }elseif ($value== Souscription::PENDING){
-                        return '<a class="btn btn-sm btn-warning">'.$value.'</a>';
-                    }
-                    else{
-                        return '<a class="btn btn-sm btn-danger">'.$value.'</a>';
+                    if ($value == Souscription::ACCEPTED) {
+                        return '<a class="btn btn-sm btn-success">' . $value . '</a>';
+                    } elseif ($value == Souscription::PENDING) {
+                        return '<a class="btn btn-sm btn-warning">' . $value . '</a>';
+                    } else {
+                        return '<a class="btn btn-sm btn-danger">' . $value . '</a>';
                     }
                 }])
             ->createAdapter(ORMAdapter::class, [
                 'entity' => Souscription::class,
                 'query' => function (QueryBuilder $builder) {
                     $builder
-                        ->select('souscription','customer')
+                        ->select('souscription', 'customer')
                         ->from(Souscription::class, 'souscription')
                         ->join('souscription.customer', 'customer')
-                        ->join('customer.compte', 'compte')
-                    ;
+                        ->join('customer.compte', 'compte');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -310,24 +312,25 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/souscriptions.html.twig', [
             'datatable' => $table,
-            'title'=>"Activations"
+            'title' => "Activations"
         ]);
     }
+
     /**
      * @Route("/customers", name="customers")
      */
     public function customers(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('customer', TextColumn::class,[
+            ->add('customer', TextColumn::class, [
                 'label' => 'Name',
-                'field'=>'compte.name'
+                'field' => 'compte.name'
             ])
-            ->add('email', TextColumn::class,[
+            ->add('email', TextColumn::class, [
                 'label' => 'Email',
-                'field'=>'compte.email'
+                'field' => 'compte.email'
             ])
-            ->add('phone', TextColumn::class,[
+            ->add('phone', TextColumn::class, [
                 'label' => 'Phone',
             ])
             ->add('id', TwigColumn::class, [
@@ -341,10 +344,9 @@ class DefaultController extends AbstractController
                 'entity' => Souscription::class,
                 'query' => function (QueryBuilder $builder) {
                     $builder
-                        ->select('compte','customer')
+                        ->select('compte', 'customer')
                         ->from(Customer::class, 'customer')
-                        ->join('customer.compte', 'compte')
-                    ;
+                        ->join('customer.compte', 'compte');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -352,27 +354,27 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/customers.html.twig', [
             'datatable' => $table,
-            'title'=>"Customers"
+            'title' => "Customers"
         ]);
     }
+
     /**
      * @Route("/agents", name="agents")
      */
     public function agents(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('agent', TextColumn::class,[
+            ->add('agent', TextColumn::class, [
                 'label' => 'Name',
-                'field'=>'compte.name'
+                'field' => 'compte.name'
             ])
-            ->add('email', TextColumn::class,[
+            ->add('email', TextColumn::class, [
                 'label' => 'Email',
-                'field'=>'compte.email'
+                'field' => 'compte.email'
             ])
-            ->add('phone', TextColumn::class,[
+            ->add('phone', TextColumn::class, [
                 'label' => 'Phone',
             ])
-
             ->add('id', TwigColumn::class, [
                 'className' => 'buttons',
                 'label' => 'action',
@@ -384,10 +386,9 @@ class DefaultController extends AbstractController
                 'entity' => Souscription::class,
                 'query' => function (QueryBuilder $builder) {
                     $builder
-                        ->select('compte','customer')
+                        ->select('compte', 'customer')
                         ->from(Personnel::class, 'customer')
-                        ->join('customer.compte', 'compte')
-                    ;
+                        ->join('customer.compte', 'compte');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -395,27 +396,28 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/agents.html.twig', [
             'datatable' => $table,
-            'agences'=>$this->agenceRepository->findAll(),
-            'title'=>"Agents"
+            'agences' => $this->agenceRepository->findAll(),
+            'title' => "Agents"
         ]);
     }
+
     /**
      * @Route("/agences", name="agences")
      */
     public function agences(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('agence', TextColumn::class,[
+            ->add('agence', TextColumn::class, [
                 'label' => 'Name',
-                'field'=>'agence.name'
+                'field' => 'agence.name'
             ])
-            ->add('phone', TextColumn::class,[
+            ->add('phone', TextColumn::class, [
                 'label' => 'Phone',
             ])
-            ->add('address', TextColumn::class,[
+            ->add('address', TextColumn::class, [
                 'label' => 'Address',
             ])
-            ->add('city', TextColumn::class,[
+            ->add('city', TextColumn::class, [
                 'label' => 'City',
             ])
             ->add('id', TwigColumn::class, [
@@ -430,8 +432,7 @@ class DefaultController extends AbstractController
                 'query' => function (QueryBuilder $builder) {
                     $builder
                         ->select('agence')
-                        ->from(Agence::class, 'agence')
-                    ;
+                        ->from(Agence::class, 'agence');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -439,18 +440,19 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/agences.html.twig', [
             'datatable' => $table,
-            'title'=>"Agences"
+            'title' => "Agences"
         ]);
     }
+
     /**
      * @Route("/customer/edit/{id}", name="customer_edit")
      * @param Customer $bouquet
      * @return Response
      */
-    public function customer_edit(Customer $customer,Request $request): Response
+    public function customer_edit(Customer $customer, Request $request): Response
     {
-        $data=[];
-        if ($request->getMethod()=="POST"){
+        $data = [];
+        if ($request->getMethod() == "POST") {
             $entityManager = $this->getDoctrine()->getManager();
             $customer->setCity($request->get('city'));
             $customer->setAddress($request->get('city'));
@@ -461,21 +463,22 @@ class DefaultController extends AbstractController
         }
 
         return $this->render('default/edit/editcustomer.html.twig', [
-            'data'=>$data,
-            'customer'=>$customer,
-            'title'=>"Edit Customers",
-            'chanels'=>[]
+            'data' => $data,
+            'customer' => $customer,
+            'title' => "Edit Customers",
+            'chanels' => []
         ]);
     }
+
     /**
      * @Route("/agences/edit/{id}", name="agence_edit")
      * @param Customer $bouquet
      * @return Response
      */
-    public function agence_edit(Agence $agence,Request $request): Response
+    public function agence_edit(Agence $agence, Request $request): Response
     {
-        $data=[];
-        if ($request->getMethod()=="POST"){
+        $data = [];
+        if ($request->getMethod() == "POST") {
             $entityManager = $this->getDoctrine()->getManager();
             $agence->setCity($request->get('city'));
             $agence->setAddress($request->get('city'));
@@ -486,22 +489,23 @@ class DefaultController extends AbstractController
         }
 
         return $this->render('default/edit/editagence.html.twig', [
-            'agence'=>$agence,
-            'title'=>"Edit Agences",
+            'agence' => $agence,
+            'title' => "Edit Agences",
 
         ]);
     }
+
     /**
      * @Route("/agents/edit/{id}", name="agent_edit")
      * @param Customer $bouquet
      * @return Response
      */
-    public function agent_edit(Personnel $personnel,Request $request): Response
+    public function agent_edit(Personnel $personnel, Request $request): Response
     {
-        $data=[];
-        if ($request->getMethod()=="POST"){
+        $data = [];
+        if ($request->getMethod() == "POST") {
             $entityManager = $this->getDoctrine()->getManager();
-            $compte=$personnel->getCompte();
+            $compte = $personnel->getCompte();
             $compte->setName($request->get('name'));
             $compte->setPhone($request->get('phone'));
             $compte->setEmail($request->get('email'));
@@ -510,11 +514,12 @@ class DefaultController extends AbstractController
         }
 
         return $this->render('default/edit/editagent.html.twig', [
-            'agent'=>$personnel,
-            'title'=>"Edit Agents",
+            'agent' => $personnel,
+            'title' => "Edit Agents",
 
         ]);
     }
+
     /**
      * @Route("/agents/add", name="agent_add")
      * @param Customer $bouquet
@@ -522,12 +527,12 @@ class DefaultController extends AbstractController
      */
     public function agent_add(Request $request): Response
     {
-        $data=[];
-        if ($request->getMethod()=="POST"){
+        $data = [];
+        if ($request->getMethod() == "POST") {
             $entityManager = $this->getDoctrine()->getManager();
-            $agence=$this->agenceRepository->find($request->get('agence'));
-            $personnel=new Personnel();
-            $compte=new User();
+            $agence = $this->agenceRepository->find($request->get('agence'));
+            $personnel = new Personnel();
+            $compte = new User();
             $compte->setName($request->get('name'));
             $compte->setPhone($request->get('phone'));
             $compte->setEmail($request->get('email'));
@@ -538,7 +543,7 @@ class DefaultController extends AbstractController
             $entityManager->persist($compte);
             $personnel->setCompte($compte);
             $personnel->setAgence($agence);
-            $personnel->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
+            $personnel->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
             $entityManager->persist($personnel);
             $entityManager->flush();
             return $this->redirectToRoute('agents');
@@ -553,10 +558,10 @@ class DefaultController extends AbstractController
      */
     public function agence_add(Request $request): Response
     {
-        $data=[];
-        if ($request->getMethod()=="POST"){
+        $data = [];
+        if ($request->getMethod() == "POST") {
             $entityManager = $this->getDoctrine()->getManager();
-            $agence=new Agence();
+            $agence = new Agence();
             $agence->setName($request->get('name'));
             $agence->setPhone($request->get('phone'));
             $agence->setAddress($request->get('address'));
@@ -567,30 +572,31 @@ class DefaultController extends AbstractController
         }
         return $this->redirectToRoute('agences');
     }
+
     /**
      * @Route("/customers/addcard/{id}", name="customer_add_card")
      * @param Customer $bouquet
      * @return Response
      */
-    public function customer_add_card(Customer $customer,Request $request): Response
+    public function customer_add_card(Customer $customer, Request $request): Response
     {
-        $data=[];
-        if ($request->getMethod()=="POST"){
+        $data = [];
+        if ($request->getMethod() == "POST") {
             $entityManager = $this->getDoctrine()->getManager();
-            $card=new Card();
+            $card = new Card();
             $card->setName($request->get('cardname'));
             $card->setNumerocard($request->get('cardnumber'));
             //$card->setAmount($data['amount']);
             $entityManager->persist($card);
-            $cardcustomer=new CardCustomer();
+            $cardcustomer = new CardCustomer();
             $cardcustomer->setCustomer($customer);
             $cardcustomer->setCard($card);
             $cardcustomer->setIsActive(false);
-            $cardcustomer->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
-            $cardcustomer->setPeriodto(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
+            $cardcustomer->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+            $cardcustomer->setPeriodto(new \DateTime('now', new \DateTimeZone('Africa/Douala')));
             $entityManager->persist($cardcustomer);
             $entityManager->flush();
-            if ($request->get('saveandactivate')){
+            if ($request->get('saveandactivate')) {
                 $url = $this->generateUrl('customer_activate_card', ['id' => $cardcustomer->getCustomer()->getId()]);
                 return $this->redirect($url);
             }
@@ -598,38 +604,80 @@ class DefaultController extends AbstractController
         }
 
         return $this->render('default/edit/addcardcustomer.html.twig', [
-            'customer'=>$customer,
-            'cards'=>$this->cardcustomerRepository->findBy(['customer'=>$customer]),
-            'title'=>"Add card",
+            'customer' => $customer,
+            'cards' => $this->cardcustomerRepository->findBy(['customer' => $customer]),
+            'title' => "Add card",
 
         ]);
     }
+
     /**
      * @Route("/cards/activate", name="activate_card")
      * @return Response
      */
     public function activatecard(Request $request): Response
     {
-        $data=[];
-        if ($request->getMethod()=="POST"){
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->flush();
-            return $this->redirectToRoute('customers');
+        $data = [];
+        if ($request->getMethod() == "POST") {
+            $produts = $request->get('bouquets');
+            $this->logger->info(json_encode($produts));
+            $cardcustomer = $this->cardcustomerRepository->find($request->get('cardcustomer'));
+            $reference = "";
+            $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+            for ($i = 1; $i <= 12; ++$i) {
+                $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
+            }
+            if (strtolower($request->get('method')) == 'mobil_money') {
+                $currency = "XAF";
+            } else {
+                $currency = "USD";
+            }
+            $data = [
+                'amount' => $request->get('amount'),
+                'currency_code' => $currency,
+                'ccode' => 'CM',
+                'lang' => 'en',
+                'item_ref' => $reference,
+                'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
+                'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
+                'email' => 'exemple@email.com',
+                'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
+                'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
+                'last_name' => 'Surname',
+                'public_key' => $this->params->get('PAYMONNEY_KEY'),
+                'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
+                'environement' => 'test'
+            ];
+            $client = new ClientPaymoo();
+            $response = $client->postfinal("payment_url", $data);
+            $this->logger->info($response['response']);
+            $this->logger->info($request->get('amount'));
+            if ($response['response'] == "success") {
+                $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                $url = $response["payment_url"];
+                $this->logger->info($url);
+                $link_array = explode('/', $url);
+                return $this->redirect($url);
+            } else {
+                return $this->redirectToRoute('erropage');
+            }
         }
 
         return $this->render('default/edit/activatecard.html.twig', [
-            'title'=>"Activate card",
-            'customers'=>$this->customerRepository->findAll()
+            'title' => "Activate card",
+            'customers' => $this->customerRepository->findAll(),
+            'bouquets' => $this->bouquetRepository->findAll()
         ]);
     }
+
     /**
      * @Route("/cards/addactivatefromcard/{id}", name="addactivatefromcard")
      * @return Response
      */
-    public function addactivatefromcard(CardCustomer $cardcustomer ,Request $request): Response
+    public function addactivatefromcard(CardCustomer $cardcustomer, Request $request): Response
     {
-        if ($request->getMethod()=="POST"){
-            $produts=$request->get('bouquets');
+        if ($request->getMethod() == "POST") {
+            $produts = $request->get('bouquets');
             $this->logger->info(json_encode($produts));
             $reference = "";
             $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -661,33 +709,34 @@ class DefaultController extends AbstractController
             $response = $client->postfinal("payment_url", $data);
             $this->logger->info(json_encode($response));
             if ($response['response'] == "success") {
-                $this->createActivate($cardcustomer, $reference, $request->get('amount'),$produts);
+                $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
                 $url = $response["payment_url"];
                 $this->logger->info($url);
                 $link_array = explode('/', $url);
                 return $this->redirect($url);
-            }else{
+            } else {
                 return $this->redirectToRoute('erropage');
             }
         }
         return $this->render('default/edit/addactivatefromcard.html.twig', [
-            'title'=>"Activate card",
-            'cardcustomer'=>$cardcustomer,
-            'bouquets'=>$this->bouquetRepository->findAll()
+            'title' => "Activate card",
+            'cardcustomer' => $cardcustomer,
+            'bouquets' => $this->bouquetRepository->findAll()
         ]);
     }
+
     /**
      * @Route("/customers/activatecard/{id}", name="customer_activate_card")
      * @param Customer $customer
      * @param Request $request
      * @return Response
      */
-    public function customer_activate_card(Customer $customer,Request $request): Response
+    public function customer_activate_card(Customer $customer, Request $request): Response
     {
-        $data=[];
+        $data = [];
 
-        if ($request->getMethod()=="POST"){
-            $produts=$request->get('bouquets');
+        if ($request->getMethod() == "POST") {
+            $produts = $request->get('bouquets');
             $this->logger->info(json_encode($produts));
             $cardcustomer = $this->cardcustomerRepository->find($request->get('cardcustomer'));
             $reference = "";
@@ -720,25 +769,26 @@ class DefaultController extends AbstractController
             $response = $client->postfinal("payment_url", $data);
             $this->logger->info($response['response']);
             if ($response['response'] == "success") {
-                $this->createActivate($cardcustomer, $reference, $request->get('amount'),$produts);
+                $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
                 $url = $response["payment_url"];
                 $this->logger->info($url);
                 $link_array = explode('/', $url);
                 return $this->redirect($url);
-            }else{
+            } else {
                 return $this->redirectToRoute('erropage');
             }
         }
 
         return $this->render('default/edit/activatecardcustomer.html.twig', [
-            'customer'=>$customer,
-            'cards'=>$this->cardcustomerRepository->findAll(),
-            'bouquets'=>$this->bouquetRepository->findAll(),
-            'title'=>"Activate card",
+            'customer' => $customer,
+            'cards' => $this->cardcustomerRepository->findAll(),
+            'bouquets' => $this->bouquetRepository->findAll(),
+            'title' => "Activate card",
 
         ]);
     }
-    function createActivate(CardCustomer $card, $reference, $amount,$produts)
+
+    function createActivate(CardCustomer $card, $reference, $amount, $produts)
     {
         $entityManager = $this->getDoctrine()->getManager();
         $actiavtion = new Activation();
@@ -751,13 +801,15 @@ class DefaultController extends AbstractController
         $actiavtion->setStatus(Activation::PENDING);
         $actiavtion->setBouquets($produts);
         $entityManager->persist($actiavtion);
-        for ($i=0;$i<sizeof($produts);$i++){
+        for ($i = 0; $i < sizeof($produts); $i++) {
             $cardpending = new CardPending();
             $cardpending->setCardid($card->getCard()->getNumerocard());
             $cardpending->setIsdelete(true);
             $cardpending->setSendornot(1);
             $cardpending->setCardstatus(1);
             $cardpending->setBouquet($produts[$i]);
+            $cardpending->setStatus(CardPending::PENDING);
+            $cardpending->setActivation($actiavtion->getId());
             $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
             $mod = "+1 month";
             $date_line->modify($mod);
@@ -767,22 +819,40 @@ class DefaultController extends AbstractController
 
         $entityManager->flush();
     }
+
     /**
      * @Route("/getpricebouquet/ajax", name="getpricebouquet_ajax", methods={"GET"})
      */
     public function getcandidatAjax(Request $request): JsonResponse
     {
-        $bqts=$request->get('bouquets');
-        $amount=0.0;
-        for ($i=0;$i<count($bqts);$i++){
-            $bq=$this->bouquetRepository->findOneBy(['numero'=>$bqts[$i]]);
-            $amount+=$bq->getPrice();
-
+        $bqts = $request->get('bouquets');
+        $amount = 0.0;
+        for ($i = 0; $i < count($bqts); $i++) {
+            $bq = $this->bouquetRepository->findOneBy(['numero' => $bqts[$i]]);
+            $amount += $bq->getPrice();
         }
         $data = [
             'amount' => $amount,
         ];
 
+        return new JsonResponse($data, 200);
+    }
+
+    /**
+     * @Route("/getcardcustomer/ajax", name="getcardcustomer_ajax", methods={"GET"})
+     */
+    public function getcardcustomerAjax(Request $request): JsonResponse
+    {
+        $customer = $this->customerRepository->find($request->get('customer'));
+        $cardcustomers = $this->cardcustomerRepository->findBy(['customer' => $customer]);
+        $data=[];
+        foreach ($cardcustomers as $cardCustomer) {
+            $data[] = [
+                'id' => $cardCustomer->getId(),
+                'numero'=>$cardCustomer->getCard()->getNumerocard(),
+                'cardid'=>$cardCustomer->getCard()->getId()
+            ];
+        }
         return new JsonResponse($data, 200);
     }
 }
