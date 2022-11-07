@@ -261,9 +261,13 @@ class DefaultController extends AbstractController
     public function souscriptions(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('datecreation', DateTimeColumn::class, [
+            ->add('createdAt', DateTimeColumn::class, [
                 'label' => 'Date ',
-                'format' => "Y-m-d"
+                'format' => "Y-m-d h:m"
+            ])
+            ->add('card', TextColumn::class, [
+                'label' => 'N° card',
+                'field' => 'card.name'
             ])
             ->add('amount', TextColumn::class, [
                 'label' => 'Montant',
@@ -271,25 +275,19 @@ class DefaultController extends AbstractController
                     return '<span>' . $value . '</span>';
                 }
             ])
-            ->add('customer', TextColumn::class, [
-                'label' => 'Nom du client',
-                'field' => 'compte.name'
-            ])
-            ->add('email', TextColumn::class, [
-                'label' => 'Email du client',
-                'field' => 'compte.email'
-            ])
-            ->add('datevalidite', DateTimeColumn::class, [
-                'label' => 'Date Expiration',
-                'field' => 'customer.expiredAt',
-                'format' => "Y-m-d"
-            ])
-            ->add('statut', TextColumn::class, [
+           ->add('bouquets', TwigColumn::class, [
+                'label' => 'Bouquets',
+                'template' => 'default/buttons/activation.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+
+            ->add('status', TextColumn::class, [
                 'className' => 'buttons',
                 'label' => 'status',
                 // 'template' => 'user/status.html.twig',
                 'render' => function ($value, $context) {
-                    if ($value == Souscription::ACCEPTED) {
+                    if ($value == Activation::SUCCESS) {
                         return '<a class="btn btn-sm btn-success">' . $value . '</a>';
                     } elseif ($value == Souscription::PENDING) {
                         return '<a class="btn btn-sm btn-warning">' . $value . '</a>';
@@ -298,13 +296,74 @@ class DefaultController extends AbstractController
                     }
                 }])
             ->createAdapter(ORMAdapter::class, [
-                'entity' => Souscription::class,
+                'entity' => Activation::class,
                 'query' => function (QueryBuilder $builder) {
                     $builder
-                        ->select('souscription', 'customer')
-                        ->from(Souscription::class, 'souscription')
-                        ->join('souscription.customer', 'customer')
-                        ->join('customer.compte', 'compte');
+                        ->select('souscription', 'card')
+                        ->from(Activation::class, 'souscription')
+                        ->andWhere('souscription.status = :satus')
+                        ->setParameter('satus',Activation::SUCCESS)
+                        ->join('souscription.card', 'card');
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
+        }
+        return $this->render('default/souscriptions.html.twig', [
+            'datatable' => $table,
+            'title' => "Activations"
+        ]);
+    }
+
+    /**
+     * @Route("/souscriptionspending", name="souscriptionspending")
+     */
+    public function souscriptionspending(Request $request): Response
+    {
+        $table = $this->dataTableFactory->create()
+            ->add('createdAt', DateTimeColumn::class, [
+                'label' => 'Date ',
+                'format' => "Y-m-d h:m"
+            ])
+            ->add('card', TextColumn::class, [
+                'label' => 'N° card',
+                'field' => 'card.name'
+            ])
+            ->add('amount', TextColumn::class, [
+                'label' => 'Montant',
+                'render' => function ($value, $context) {
+                    return '<span>' . $value . '</span>';
+                }
+            ])
+            ->add('bouquets', TwigColumn::class, [
+                'label' => 'Bouquets',
+                'template' => 'default/buttons/activation.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+
+            ->add('status', TextColumn::class, [
+                'className' => 'buttons',
+                'label' => 'status',
+                // 'template' => 'user/status.html.twig',
+                'render' => function ($value, $context) {
+                    if ($value == Activation::SUCCESS) {
+                        return '<a class="btn btn-sm btn-success">' . $value . '</a>';
+                    } elseif ($value == Souscription::PENDING) {
+                        return '<a class="btn btn-sm btn-warning">' . $value . '</a>';
+                    } else {
+                        return '<a class="btn btn-sm btn-danger">' . $value . '</a>';
+                    }
+                }])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Activation::class,
+                'query' => function (QueryBuilder $builder) {
+                    $builder
+                        ->select('souscription', 'card')
+                        ->from(Activation::class, 'souscription')
+                        ->andWhere('souscription.status <> :satus')
+                        ->setParameter('satus',Activation::SUCCESS)
+                        ->join('souscription.card', 'card');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {

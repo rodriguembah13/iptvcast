@@ -20,17 +20,77 @@
 {% endblock %}
 {% block body %}
     <div class="row">
-        <div class="col-xl-12 main-content ps-xl-4 pe-xl-5">
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title mt-0 mb-3">Meilleurs ventes</h4>
 
-        </div>
+                    <div class="chartjs-chart">
+                        <canvas id="lineChart" height="300"></canvas>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- end col-->
+
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-body">
+
+                    <h4 class="header-title mt-0 mb-3">Meilleurs ventes</h4>
+
+                    <div class="chartjs-chart">
+                        <canvas id="bar" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end col-->
+
     </div>
+    <!-- end row -->
+
+
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-body">
+
+                    <h4 class="header-title mt-0 mb-3">Bouquets</h4>
+
+                    <div class="chartjs-chart">
+                        <canvas id="pie" height="300"></canvas>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- end col-->
+
+        <div class="col-xl-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title mt-0 mb-3">Agences</h4>
+
+                    <div class="chartjs-chart">
+                        <canvas id="doughnut" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end col-->
+
+    </div>
+    <!-- end row -->
 {% endblock %}
 
 
 {% block javascripts %}
     {{ parent() }}
     {% include 'default/javascripts.html.twig' %}
-    <script src="{{ asset('assets/js/calendar.min.js') }}"></script>
+    <script src="{{ asset('assets/js/flots/Chart.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/flots/chartjs.init.js') }}"></script>
 
 {% endblock %}
 
