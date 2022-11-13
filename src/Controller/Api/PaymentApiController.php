@@ -167,7 +167,8 @@ class PaymentApiController extends AbstractFOSRestController
         $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
         $actiavtion->setCard($card->getCard());
         $actiavtion->setAmount($amount);
-        $month = intdiv($amount, $card->getCard()->getAmount());
+       // $month = intdiv($amount, $card->getCard()->getAmount());
+        $month = 1;
         $actiavtion->setMonthto($month);
         $actiavtion->setReference($reference);
         $actiavtion->setStatus(Activation::PENDING);
