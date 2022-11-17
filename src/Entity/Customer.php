@@ -46,6 +46,7 @@ class Customer
 
     /**
      * @ORM\ManyToOne(targetEntity=Agence::class, cascade={"persist", "remove"})
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $agence;
 

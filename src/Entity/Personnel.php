@@ -19,6 +19,7 @@ class Personnel
 
     /**
      * @ORM\ManyToOne(targetEntity=Agence::class)
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $agence;
 

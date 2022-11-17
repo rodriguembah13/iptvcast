@@ -19,11 +19,13 @@ class CardCustomer
 
     /**
      * @ORM\ManyToOne(targetEntity=Customer::class)
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $customer;
 
     /**
      * @ORM\ManyToOne(targetEntity=Card::class)
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $card;
 

@@ -23,6 +23,7 @@ use App\Service\paiement\ClientPaymoo;
 use DateTime;
 use DateTimeZone;
 use Doctrine\ORM\QueryBuilder;
+use Exception;
 use Omines\DataTablesBundle\Adapter\Doctrine\ORMAdapter;
 use Omines\DataTablesBundle\Column\DateTimeColumn;
 use Omines\DataTablesBundle\Column\TextColumn;
@@ -182,9 +183,9 @@ class DefaultController extends AbstractController
     public function cards(Request $request): Response
     {
         $table = $this->dataTableFactory->create()
-            ->add('description', TextColumn::class, [
-                'label' => 'Name',
-                'field' => 'card.name'
+            ->add('customer', TextColumn::class, [
+                'label' => 'Customer',
+                'field' => 'customer.compte.name'
             ])
             ->add('numero', TextColumn::class, [
                 'label' => 'CardID',
@@ -386,12 +387,9 @@ class DefaultController extends AbstractController
                 'label' => 'Name',
                 'field' => 'compte.name'
             ])
-            ->add('email', TextColumn::class, [
-                'label' => 'Email',
-                'field' => 'compte.email'
-            ])
             ->add('phone', TextColumn::class, [
                 'label' => 'Phone',
+                'field' => 'compte.phone'
             ])
             ->add('id', TwigColumn::class, [
                 'className' => 'buttons',
@@ -947,9 +945,11 @@ class DefaultController extends AbstractController
 
         return new JsonResponse([], 200);
     }
+
     /**
      * @Route("/import/customer", name="customer_import_xls", methods={"GET","POST"})
      *
+     * @throws Exception
      */
     public function importStudent(Request $request): Response
     {
@@ -976,6 +976,11 @@ class DefaultController extends AbstractController
                 $spreadsheet = $reader->load($uploadFilename);
                 $loadedSheetNames = $spreadsheet->getActiveSheet()->toArray();
                 foreach ($loadedSheetNames as $sheetIndex => $loadedSheetNamess) {
+                    $reference = "";
+                    $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+                    for ($i = 1; $i <= 12; ++$i) {
+                        $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
+                    }
                     if ($sheetIndex >= 1) {
                         $ga_name="tous les agences";
                        $agence=$this->agenceRepository->findOneBy(['name'=>$ga_name]);
@@ -988,8 +993,8 @@ class DefaultController extends AbstractController
                             $customer = new Customer();
                             $compte = new User();
                             $compte->setName($loadedSheetNamess[0]);
-                            $compte->setEmail($loadedSheetNamess[1] . '@cast.cm');
-                            $compte->setUsername($loadedSheetNamess[1] . '@cast.cm');
+                            $compte->setEmail($loadedSheetNamess[1].$reference. '@cast.cm');
+                            $compte->setUsername($loadedSheetNamess[1].$reference . '@cast.cm');
                             $compte->setPhone($loadedSheetNamess[2]);
                             $compte->setPassword('1234455');
                             $entityManager->persist($compte);
@@ -1014,9 +1019,10 @@ class DefaultController extends AbstractController
                             $customers[]=$cardcustomer;
                             $var[]=$loadedSheetNamess[1];
                         }
-                       // $entityManager->flush();
+
                     }
                 }
+                $entityManager->flush();
                // return $this->redirectToRoute('customer_import_xls');
             }
         }
