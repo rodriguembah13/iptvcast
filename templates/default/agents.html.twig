@@ -70,6 +70,26 @@
     <script>
         $(function () {
             $('#agents').initDataTables({{ datatable_settings(datatable) }});
+
         });
+        function deleteItem(id) {
+            $.ajax({
+                url: "{{ path('deleteagence_ajax') }}",
+                type: "GET",
+                dataType: "JSON",
+                data: {
+                    id:id,
+                },
+                success: function (data) {
+                    window.location.reload();
+                },
+                error: function (err) {
+                    alert("An error ocurred while loading data ...");
+                    setTimeout(function () {
+                        $("#overlay").fadeOut(300);
+                    }, 500);
+                }
+            });
+        }
     </script>
 {% endblock %}

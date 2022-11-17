@@ -45,7 +45,7 @@ class Customer
     private $city;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Agence::class)
+     * @ORM\ManyToOne(targetEntity=Agence::class, cascade={"persist", "remove"})
      */
     private $agence;
 

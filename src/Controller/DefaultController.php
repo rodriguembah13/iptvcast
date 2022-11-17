@@ -28,6 +28,7 @@ use Omines\DataTablesBundle\Column\DateTimeColumn;
 use Omines\DataTablesBundle\Column\TextColumn;
 use Omines\DataTablesBundle\Column\TwigColumn;
 use Omines\DataTablesBundle\DataTableFactory;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -275,13 +276,12 @@ class DefaultController extends AbstractController
                     return '<span>' . $value . '</span>';
                 }
             ])
-           ->add('bouquets', TwigColumn::class, [
+            ->add('bouquets', TwigColumn::class, [
                 'label' => 'Bouquets',
                 'template' => 'default/buttons/activation.html.twig',
                 'render' => function ($value, $context) {
                     return $value;
                 }])
-
             ->add('status', TextColumn::class, [
                 'className' => 'buttons',
                 'label' => 'status',
@@ -302,7 +302,7 @@ class DefaultController extends AbstractController
                         ->select('souscription', 'card')
                         ->from(Activation::class, 'souscription')
                         ->andWhere('souscription.status = :satus')
-                        ->setParameter('satus',Activation::SUCCESS)
+                        ->setParameter('satus', Activation::SUCCESS)
                         ->join('souscription.card', 'card')
                         ->orderBy('souscription.id', 'DESC');
                 },
@@ -342,7 +342,6 @@ class DefaultController extends AbstractController
                 'render' => function ($value, $context) {
                     return $value;
                 }])
-
             ->add('status', TextColumn::class, [
                 'className' => 'buttons',
                 'label' => 'status',
@@ -363,7 +362,7 @@ class DefaultController extends AbstractController
                         ->select('souscription', 'card')
                         ->from(Activation::class, 'souscription')
                         ->andWhere('souscription.status <> :satus')
-                        ->setParameter('satus',Activation::SUCCESS)
+                        ->setParameter('satus', Activation::SUCCESS)
                         ->join('souscription.card', 'card')
                         ->orderBy('souscription.id', 'DESC');
                 },
@@ -906,14 +905,126 @@ class DefaultController extends AbstractController
     {
         $customer = $this->customerRepository->find($request->get('customer'));
         $cardcustomers = $this->cardcustomerRepository->findBy(['customer' => $customer]);
-        $data=[];
+        $data = [];
         foreach ($cardcustomers as $cardCustomer) {
             $data[] = [
                 'id' => $cardCustomer->getId(),
-                'numero'=>$cardCustomer->getCard()->getNumerocard(),
-                'cardid'=>$cardCustomer->getCard()->getId()
+                'numero' => $cardCustomer->getCard()->getNumerocard(),
+                'cardid' => $cardCustomer->getCard()->getId()
             ];
         }
         return new JsonResponse($data, 200);
+    }
+    /**
+     * @Route("/deleteagence/ajax", name="deleteagence_ajax", methods={"GET"})
+     */
+    public function deleteAgenceAjax(Request $request): JsonResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $agence = $this->agenceRepository->find($request->get('id'));
+        $this->agenceRepository->remove($agence,false);
+        $entityManager->remove($agence);
+        $entityManager->flush();
+
+        return new JsonResponse([], 200);
+    }
+    /**
+     * @Route("/deletecustomer/ajax", name="deletecustomer_ajax", methods={"GET"})
+     */
+    public function deleteCustomerAjax(Request $request): JsonResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $customer = $this->customerRepository->find($request->get('id'));
+        $carcustomer=$this->cardcustomerRepository->findOneBy(['customer'=>$customer]);
+        if (!is_null($carcustomer)){
+            $entityManager->remove($carcustomer->getCard());
+            $entityManager->remove($carcustomer);
+        }
+
+        $entityManager->remove($customer->getCompte());
+        $entityManager->remove($customer);
+        $entityManager->flush();
+
+        return new JsonResponse([], 200);
+    }
+    /**
+     * @Route("/import/customer", name="customer_import_xls", methods={"GET","POST"})
+     *
+     */
+    public function importStudent(Request $request): Response
+    {
+        $customers=[];
+        $var=[];
+        if ($request->getMethod() == 'POST') {
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $uploadFilename = $request->files->get('file');
+            if (empty($uploadFilename)) {
+                return new Response('nafile', Response::HTTP_INTERNAL_SERVER_ERROR, ['']);
+            }
+            if ($uploadFilename) {
+                $destination = $this->getParameter('kernel.project_dir') . '/public/uploads/xls/';
+                if ('xls' == $uploadFilename->guessExtension()) {
+                    $inputFileType = 'Xls';
+                } elseif ('csv' == $uploadFilename->guessExtension()) {
+                    $inputFileType = 'Csv';
+                } else {
+                    return new Response('Bad response', Response::HTTP_BAD_REQUEST, ['']);
+                }
+
+                $reader = IOFactory::createReader($inputFileType);
+                $spreadsheet = $reader->load($uploadFilename);
+                $loadedSheetNames = $spreadsheet->getActiveSheet()->toArray();
+                foreach ($loadedSheetNames as $sheetIndex => $loadedSheetNamess) {
+                    if ($sheetIndex >= 1) {
+                        $ga_name="tous les agences";
+                       $agence=$this->agenceRepository->findOneBy(['name'=>$ga_name]);
+                       /* if (is_null($agence)){
+                            $agence=new Agence();
+                            $agence->setName($loadedSheetNamess[2]);
+                            $entityManager->persist($agence);
+                        }*/
+                        if (!empty($loadedSheetNamess[0])){
+                            $customer = new Customer();
+                            $compte = new User();
+                            $compte->setName($loadedSheetNamess[0]);
+                            $compte->setEmail($loadedSheetNamess[1] . '@cast.cm');
+                            $compte->setUsername($loadedSheetNamess[1] . '@cast.cm');
+                            $compte->setPhone($loadedSheetNamess[2]);
+                            $compte->setPassword('1234455');
+                            $entityManager->persist($compte);
+                            $customer->setCompte($compte);
+                             $customer->setAgence($agence);
+                            $card = new Card();
+                            $card->setName('gospel');
+                            if (strlen($loadedSheetNamess[1])>8){
+                               $num= substr("".$loadedSheetNamess[1],-8);
+                                $card->setNumerocard($num);
+                            }else{
+                                $card->setNumerocard($loadedSheetNamess[1]);
+                            }
+                            $card->setCreated(new DateTime('now'));
+                            $entityManager->persist($card);
+                            $entityManager->persist($customer);
+                            $cardcustomer = new CardCustomer();
+                            $cardcustomer->setCustomer($customer);
+                            $cardcustomer->setCard($card);
+                            $cardcustomer->setIsActive(true);
+                            $entityManager->persist($cardcustomer);
+                            $customers[]=$cardcustomer;
+                            $var[]=$loadedSheetNamess[1];
+                        }
+                       // $entityManager->flush();
+                    }
+                }
+               // return $this->redirectToRoute('customer_import_xls');
+            }
+        }
+       // dump($var);
+
+        return $this->render('default/edit/importcustomer.html.twig', [
+            'title' => "Import customer",
+            'customers'=>$customers
+        ]);
     }
 }

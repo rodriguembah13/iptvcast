@@ -36,6 +36,10 @@ class Agence
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $city;
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $ismaster=false;
 
     public function getId(): ?int
     {
@@ -89,4 +93,21 @@ class Agence
 
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function isIsmaster(): bool
+    {
+        return $this->ismaster;
+    }
+
+    /**
+     * @param bool $ismaster
+     */
+    public function setIsmaster(bool $ismaster): void
+    {
+        $this->ismaster = $ismaster;
+    }
+
 }

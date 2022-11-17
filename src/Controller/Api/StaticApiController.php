@@ -121,6 +121,7 @@ class StaticApiController extends AbstractFOSRestController
     public function searchCustomers(Request $request)
     {
         $customers = $this->customerRepository->searchCustomer($request->get('q'));
+
         $values = [];
         foreach ($customers as $customer) {
             $values[] = [
