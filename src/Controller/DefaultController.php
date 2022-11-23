@@ -1057,7 +1057,7 @@ class DefaultController extends AbstractController
 
                     }
                 }
-               // $entityManager->flush();
+                $entityManager->flush();
                // return $this->redirectToRoute('customer_import_xls');
             }
         }
