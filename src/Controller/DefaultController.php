@@ -412,6 +412,7 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/customers.html.twig', [
             'datatable' => $table,
+            'agences'=>$this->agenceRepository->findAll(),
             'title' => "Customers"
         ]);
     }
@@ -632,9 +633,43 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * @Route("/customers/addcard/{id}", name="customer_add_card")
-     * @param Customer $bouquet
+     * @Route("/customer/add", name="customer_add")
+     * @param Request $request
      * @return Response
+     * @throws Exception
+     */
+    public function customer_add(Request $request): Response
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        if ($request->getMethod() == "POST") {
+            $agence=$this->agenceRepository->find($request->get('agence'));
+            $compte=new User();
+            $compte->setEmail($request->get('email'));
+            $compte->setName($request->get('name'));
+            $compte->setPhone($request->get('phone'));
+            $compte->setUsername($request->get('email'));
+            $encodedPassword = $this->passwordEncoder->hashPassword($compte, "teraqs12_}//reagart-(365");
+            $compte->setRoles(['ROLE_CUSTOMER']);
+            $compte->setPassword($encodedPassword);
+            $entityManager->persist($compte);
+            $customer=new Customer();
+            $customer->setAgence($agence);
+            $customer->setCompte($compte);
+            $customer->setCity($request->get('city'));
+            $customer->setAddress($request->get('address'));
+            $customer->setDatecreation(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
+            $entityManager->persist($customer);
+            $entityManager->flush();
+        }
+        return $this->redirectToRoute('customers');
+    }
+
+    /**
+     * @Route("/customers/addcard/{id}", name="customer_add_card")
+     * @param Customer $customer
+     * @param Request $request
+     * @return Response
+     * @throws Exception
      */
     public function customer_add_card(Customer $customer, Request $request): Response
     {
@@ -951,7 +986,7 @@ class DefaultController extends AbstractController
      *
      * @throws Exception
      */
-    public function importStudent(Request $request): Response
+    public function importCustomer(Request $request): Response
     {
         $customers=[];
         $var=[];
@@ -1022,7 +1057,7 @@ class DefaultController extends AbstractController
 
                     }
                 }
-                $entityManager->flush();
+               // $entityManager->flush();
                // return $this->redirectToRoute('customer_import_xls');
             }
         }

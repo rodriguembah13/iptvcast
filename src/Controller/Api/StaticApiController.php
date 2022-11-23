@@ -320,10 +320,12 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($response, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Post("/v1/customers", name="api_customers_ajax")
      * @param Request $request
      * @return Response
+     * @throws \Exception
      */
     public function postcustomers(Request $request): Response
     {
