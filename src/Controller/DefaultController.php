@@ -903,7 +903,8 @@ class DefaultController extends AbstractController
             $cardpending->setBouquet($produts[$i]);
             $cardpending->setStatus(CardPending::PENDING);
             $cardpending->setActivation($actiavtion->getId());
-            $date_line = new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
+            $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
+                new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
             $mod = "+1 month";
             $date_line->modify($mod);
             $cardpending->setExpiredtime($date_line);
