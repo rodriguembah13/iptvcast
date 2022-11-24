@@ -80,7 +80,7 @@ class StaticApiController extends AbstractFOSRestController
      */
     public function getAllCustomers()
     {
-        $customers = $this->customerRepository->findAll();
+        $customers = $this->customerRepository->findAllOrder();
         $values = [];
         foreach ($customers as $customer) {
             $values[] = [
@@ -223,7 +223,7 @@ class StaticApiController extends AbstractFOSRestController
      */
     public function activations(Request $request): Response
     {
-        $cards = $this->activationRepository->findAll();
+        $cards = $this->activationRepository->findByAllorder();
         $values = [];
         foreach ($cards as $card) {
             $values[] = [

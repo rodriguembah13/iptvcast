@@ -49,12 +49,23 @@ class CustomerRepository extends ServiceEntityRepository
             ->join('c.compte','compte')
             ->andWhere('compte.name like :val')
             ->setParameter('val', '%'.$value.'%')
-            ->orderBy('c.id', 'ASC')
+            ->orderBy('compte.name', 'ASC')
             ->getQuery()
             ->getResult()
         ;
     }
-
+    /**
+     * @return Customer[] Returns an array of Customer objects
+     */
+    public function findAllOrder(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->join('c.compte','compte')
+            ->orderBy('compte.name', 'ASC')
+            ->getQuery()
+            ->getResult()
+            ;
+    }
 //    public function findOneBySomeField($value): ?Customer
 //    {
 //        return $this->createQueryBuilder('c')

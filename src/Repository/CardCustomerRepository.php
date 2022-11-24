@@ -39,20 +39,20 @@ class CardCustomerRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return CardCustomer[] Returns an array of CardCustomer objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @return CardCustomer[] Returns an array of CardCustomer objects
+     */
+    public function findByCustomer($value): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.exampleField = :val')
+            ->setParameter('val', $value)
+            ->orderBy('c.id', 'ASC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 
 //    public function findOneBySomeField($value): ?CardCustomer
 //    {

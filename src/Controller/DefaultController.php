@@ -163,7 +163,8 @@ class DefaultController extends AbstractController
                 'query' => function (QueryBuilder $builder) {
                     $builder
                         ->select('bouquet')
-                        ->from(Bouquet::class, 'bouquet');
+                        ->from(Bouquet::class, 'bouquet')
+                        ->orderBy('bouquet.description','ASC');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -208,7 +209,8 @@ class DefaultController extends AbstractController
                         ->select('card', 'customer', 'card_customer')
                         ->from(CardCustomer::class, 'card_customer')
                         ->leftJoin('card_customer.card', 'card')
-                        ->leftJoin('card_customer.customer', 'customer');
+                        ->leftJoin('card_customer.customer', 'customer')
+                        ->orderBy('card.numerocard','ASC');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -404,7 +406,8 @@ class DefaultController extends AbstractController
                     $builder
                         ->select('compte', 'customer')
                         ->from(Customer::class, 'customer')
-                        ->join('customer.compte', 'compte');
+                        ->join('customer.compte', 'compte')
+                        ->orderBy('compte.name','ASC');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -447,7 +450,8 @@ class DefaultController extends AbstractController
                     $builder
                         ->select('compte', 'customer')
                         ->from(Personnel::class, 'customer')
-                        ->join('customer.compte', 'compte');
+                        ->join('customer.compte', 'compte')
+                        ->orderBy('compte.name','ASC');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
@@ -491,7 +495,8 @@ class DefaultController extends AbstractController
                 'query' => function (QueryBuilder $builder) {
                     $builder
                         ->select('agence')
-                        ->from(Agence::class, 'agence');
+                        ->from(Agence::class, 'agence')
+                    ->orderBy('agence.name','ASC');
                 },
             ])->handleRequest($request);
         if ($table->isCallback()) {
