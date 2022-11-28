@@ -83,10 +83,16 @@ class StaticApiController extends AbstractFOSRestController
         $customers = $this->customerRepository->findAllOrder();
         $values = [];
         foreach ($customers as $customer) {
+            $cards=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
+            $valcar="";
+            foreach ($cards as $cardCustomer){
+                $valcar=$valcar.";".$cardCustomer->getCard()->getNumerocard();
+            }
             $values[] = [
                 'id' => $customer->getId(),
                 'name' => $customer->getCompte()->getName(),
                 'phone' => $customer->getCompte()->getPhone(),
+                'card' => $valcar,
                 'email' => $customer->getCompte()->getEmail(),
                 'agence' => $customer->getAgence()->getName(),
                 'address' => $customer->getAddress(),
@@ -124,10 +130,16 @@ class StaticApiController extends AbstractFOSRestController
 
         $values = [];
         foreach ($customers as $customer) {
+            $cards=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
+            $valcar="";
+            foreach ($cards as $cardCustomer){
+                $valcar=$valcar.";".$cardCustomer->getCard()->getNumerocard();
+            }
             $values[] = [
                 'id' => $customer->getId(),
                 'name' => $customer->getCompte()->getName(),
                 'phone' => $customer->getCompte()->getPhone(),
+                'card' => $valcar,
                 'email' => $customer->getCompte()->getEmail(),
                 'agence' => $customer->getAgence()->getName(),
                 'address' => $customer->getAddress(),

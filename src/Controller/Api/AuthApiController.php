@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 use App\Entity\Customer;
 use App\Entity\User;
 
+use App\Repository\PersonnelRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
@@ -29,6 +30,7 @@ class AuthApiController extends AbstractFOSRestController
     private $customerRepository;
     private $doctrine;
     private $souscriptionRepository;
+    private $personnelRepository;
 
     /**
      * @param EntityManagerInterface $entityManager
@@ -36,13 +38,14 @@ class AuthApiController extends AbstractFOSRestController
      * @param LoggerInterface $logger
      * @param UserPasswordHasherInterface $passwordEncoder
      */
-    public function __construct(EntityManagerInterface $entityManager,UserRepository $userRepository,
+    public function __construct(PersonnelRepository $personnelRepository,EntityManagerInterface $entityManager,UserRepository $userRepository,
                               LoggerInterface $logger,
                                 UserPasswordHasherInterface $passwordEncoder)
     {
         $this->logger = $logger;
         $this->passwordEncoder = $passwordEncoder;
         $this->userRepository=$userRepository;
+        $this->personnelRepository=$personnelRepository;
         $this->doctrine=$entityManager;
     }
 
@@ -54,15 +57,15 @@ class AuthApiController extends AbstractFOSRestController
     {
         $res = json_decode($request->getContent(), true);
         $data=$res['data'];
-        $email=$data['email'];
+        $email=$data['phone'];
         $password=$data['password'];
-        $user=$this->userRepository->findOneBy(['email'=>$email]);
+        $user=$this->userRepository->findOneBy(['phone'=>$email]);
         if (null == $user) {
             $view = $this->view([], Response::HTTP_FORBIDDEN, []);
             return $this->handleView($view);
         }
-        $customer = $this->customerRepository->findOneBy(['compte' => $user]);
-        if (is_null($customer)) {
+        $personnel = $this->personnelRepository->findOneBy(['compte' => $user]);
+        if (is_null($personnel)) {
             $view = $this->view([], Response::HTTP_FORBIDDEN, []);
             return $this->handleView($view);
         }
@@ -72,20 +75,19 @@ class AuthApiController extends AbstractFOSRestController
             return $this->handleView($view);
         }
         $body=[
-            'id'=>$user->getId(),
+            'id'=>$personnel->getId(),
             'name'=>$user->getName(),
-            'email'=>$user->getEmail(),
-            'avatar'=>$user->getAvatar(),
-            'customer'=>$customer->getId(),
-            'validity_date'=>$customer->getValiditydate(),
-            'exprired_date'=>$customer->getExpiredAt(),
+            'phone'=>$user->getPhone(),
+            'agence'=>$personnel->getAgence()->getId(),
         ];
         $view = $this->view($body, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Post("/v1/register", name="api_register")
      * @param Request $request
+     * @return Response
      */
     public function register(Request $request)
     {
