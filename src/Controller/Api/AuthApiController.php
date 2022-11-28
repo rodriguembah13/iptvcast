@@ -33,6 +33,7 @@ class AuthApiController extends AbstractFOSRestController
     private $personnelRepository;
 
     /**
+     * @param PersonnelRepository $personnelRepository
      * @param EntityManagerInterface $entityManager
      * @param UserRepository $userRepository
      * @param LoggerInterface $logger
@@ -52,6 +53,7 @@ class AuthApiController extends AbstractFOSRestController
     /**
      * @Rest\Post("/v1/signin", name="api_auth")
      * @param Request $request
+     * @return Response
      */
     public function auth(Request $request)
     {
@@ -64,16 +66,20 @@ class AuthApiController extends AbstractFOSRestController
             $view = $this->view([], Response::HTTP_FORBIDDEN, []);
             return $this->handleView($view);
         }
+        $this->logger->info("--------------------------------M1".$user);
         $personnel = $this->personnelRepository->findOneBy(['compte' => $user]);
+        $this->logger->info("--------------------------------M0");
         if (is_null($personnel)) {
             $view = $this->view([], Response::HTTP_FORBIDDEN, []);
             return $this->handleView($view);
         }
+        $this->logger->info("--------------------------------M1");
         $isValid = $this->passwordEncoder->isPasswordValid($user, $password);
         if (!$isValid) {
             $view = $this->view([], Response::HTTP_FORBIDDEN, []);
             return $this->handleView($view);
         }
+        $this->logger->info("--------------------------------M2");
         $body=[
             'id'=>$personnel->getId(),
             'name'=>$user->getName(),

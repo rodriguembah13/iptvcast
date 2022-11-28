@@ -111,6 +111,8 @@ class PaymentApiController extends AbstractFOSRestController
         $res = json_decode($request->getContent(), true);
         $data = $res['data'];
         $produts=$data['bouquets'];
+        $amount=$data['amount'];
+        $month=$data['month'];
         $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $reference = "";
         $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -123,7 +125,7 @@ class PaymentApiController extends AbstractFOSRestController
             $currency = "USD";
         }
         $data = [
-            'amount' => $data['amount'],
+            'amount' => $amount,
             'currency_code' => $currency,
             'ccode' => 'CM',
             'lang' => 'en',
@@ -140,9 +142,8 @@ class PaymentApiController extends AbstractFOSRestController
         ];
         $client = new ClientPaymoo();
         $response = $client->postfinal("payment_url", $data);
-        $this->logger->info($response['response']);
         if ($response['response'] == "success") {
-            $this->createActivate($cardcustomer, $reference, $data['amount'],$produts);
+            $this->createActivate($cardcustomer, $reference, $amount,$produts,$month);
             $url = $response["payment_url"];
             $this->logger->info($url);
             $link_array = explode('/', $url);
@@ -161,14 +162,14 @@ class PaymentApiController extends AbstractFOSRestController
             return $this->handleView($view);
         }
     }
-    function createActivate(CardCustomer $card, $reference, $amount,$produts)
+    function createActivate(CardCustomer $card, $reference, $amount,$produts,$month)
     {
         $actiavtion = new Activation();
         $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
         $actiavtion->setCard($card->getCard());
         $actiavtion->setAmount($amount);
        // $month = intdiv($amount, $card->getCard()->getAmount());
-        $month = 1;
+        //$month = 1;
         $actiavtion->setMonthto($month);
         $actiavtion->setReference($reference);
         $actiavtion->setStatus(Activation::PENDING);
@@ -185,9 +186,10 @@ class PaymentApiController extends AbstractFOSRestController
             $cardpending->setBouquet($produts[$i]);
             $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
                 new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
-            $mod = "+1 month";
+            $mod = "+".$month." month";
             $date_line->modify($mod);
             $cardpending->setExpiredtime($date_line);
+            $this->logger->info($date_line->format("Y-m-d"));
             $this->doctrine->persist($cardpending);
         }
 

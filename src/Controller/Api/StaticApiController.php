@@ -238,15 +238,48 @@ class StaticApiController extends AbstractFOSRestController
         $cards = $this->activationRepository->findByAllorder();
         $values = [];
         foreach ($cards as $card) {
+            $mod = "+".$card->getMonthto()." month";
             $values[] = [
                 'name' => $card->getCard()->getName(),
                 'numero' => $card->getCard()->getNumerocard(),
                 'amount' => $card->getAmount(),
                 'created'=>$card->getCreatedAt()->format('Y-m-d h:m:s'),
+                'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m:s'),
                 'monthto' => $card->getMonthto(),
                 'id' => $card->getId(),
             ];
         }
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Rest\Get("/v1/activations/customer/{id}", name="api_activations_customer_ajax")
+     * @param Request $request
+     * @return Response
+     */
+    public function activationscustomer(Customer $customer,Request $request): Response
+    {
+        $cardcustomers=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
+        $values = [];
+        foreach ($cardcustomers as $cardCustomer){
+            $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard()]);
+
+            foreach ($cards as $card) {
+                $mod = "+".$card->getMonthto()." month";
+                $values[] = [
+                    'name' => $card->getCard()->getName(),
+                    'numero' => $card->getCard()->getNumerocard(),
+                    'amount' => $card->getAmount(),
+                    'status'=>$card->getStatus(),
+                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m:s'),
+                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m:s'),
+                    'monthto' => $card->getMonthto(),
+                    'id' => $card->getId(),
+                ];
+            }
+        }
+
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
