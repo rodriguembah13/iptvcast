@@ -61,7 +61,7 @@ class CardCustomerRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->join('c.card','card')
             ->andWhere('card.numerocard like :val')
-            ->setParameter('val', '%'.$value)
+            ->setParameter('val', $value.'%')
             ->orderBy('card.numerocard', 'ASC')
             ->getQuery()
             ->getResult()
