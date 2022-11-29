@@ -126,13 +126,15 @@ class StaticApiController extends AbstractFOSRestController
      */
     public function searchCustomers(Request $request)
     {
-        if (is_int($request->get('q'))){
-
-            $customers = $this->cardcustomerRepository->searchCardCustomer($request->get('q'));
-            array_map(function ($item){
+        $this->logger->info($request->get('q'));
+        if (is_numeric($request->get('q'))){
+            $this->logger->info("Je suis ici");
+            $customers_ = $this->cardcustomerRepository->searchCardCustomer($request->get('q'));
+            $customers =  array_map(function ($item){
                 return $item->getCustomer();
-            },$customers);
+            },$customers_);
         }else{
+            $this->logger->info("Je suis iciM2");
             $customers = $this->customerRepository->searchCustomer($request->get('q'));
         }
              $values = [];
