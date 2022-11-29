@@ -53,6 +53,20 @@ class CardCustomerRepository extends ServiceEntityRepository
             ->getResult()
         ;
     }
+    /**
+     * @return CardCustomer[] Returns an array of Customer objects
+     */
+    public function searchCardCustomer($value): array
+    {
+        return $this->createQueryBuilder('c')
+            ->join('c.card','card')
+            ->andWhere('card.numerocard like :val')
+            ->setParameter('val', '%'.$value.'%')
+            ->orderBy('card.numerocard', 'ASC')
+            ->getQuery()
+            ->getResult()
+            ;
+    }
 
 //    public function findOneBySomeField($value): ?CardCustomer
 //    {

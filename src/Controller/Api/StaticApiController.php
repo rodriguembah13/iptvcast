@@ -126,9 +126,16 @@ class StaticApiController extends AbstractFOSRestController
      */
     public function searchCustomers(Request $request)
     {
-        $customers = $this->customerRepository->searchCustomer($request->get('q'));
+        if (is_int($request->get('q'))){
 
-        $values = [];
+            $customers = $this->cardcustomerRepository->searchCardCustomer($request->get('q'));
+            array_map(function ($item){
+                return $item->getCustomer();
+            },$customers);
+        }else{
+            $customers = $this->customerRepository->searchCustomer($request->get('q'));
+        }
+             $values = [];
         foreach ($customers as $customer) {
             $cards=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
             $valcar="";
@@ -261,6 +268,42 @@ class StaticApiController extends AbstractFOSRestController
     public function activationscustomer(Customer $customer,Request $request): Response
     {
         $cardcustomers=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
+        $values = [];
+        foreach ($cardcustomers as $cardCustomer){
+            $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard()]);
+
+            foreach ($cards as $card) {
+                $mod = "+".$card->getMonthto()." month";
+                $values[] = [
+                    'name' => $card->getCard()->getName(),
+                    'numero' => $card->getCard()->getNumerocard(),
+                    'amount' => $card->getAmount(),
+                    'status'=>$card->getStatus(),
+                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m:s'),
+                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m:s'),
+                    'monthto' => $card->getMonthto(),
+                    'id' => $card->getId(),
+                ];
+            }
+        }
+
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
+     * @Rest\Get("/v1/activations/agent/{id}", name="api_activations_customer_ajax")
+     * @param Request $request
+     * @return Response
+     */
+    public function activationsagence(Personnel $personnel,Request $request): Response
+    {
+        $cardcustomers_=$this->cardcustomerRepository->findBy([]);
+        $cardcustomers= array_filter($cardcustomers_,function ($item) use ($personnel){
+           if ($item->getCustomer()->getAgence()=== $personnel->getAgence()){
+               return true;
+           }
+           return  false;
+        });
         $values = [];
         foreach ($cardcustomers as $cardCustomer){
             $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard()]);
