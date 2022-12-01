@@ -44,7 +44,7 @@ class CardPendingRepository extends ServiceEntityRepository
             ->andWhere('s.isdelete = 1')
             ->andWhere('s.status = :status')
             ->setMaxResults(1)
-            ->setParameter('status',CardPending::PENDING)
+            ->setParameter('status',CardPending::SUCCESS)
             ->orderBy('s.id', 'ASC')
             ->getQuery()
             ->getOneOrNullResult()
