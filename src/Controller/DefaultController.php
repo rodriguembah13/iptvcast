@@ -99,7 +99,7 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * @Route("/error", name="erropage")
+     * @Route("/v1/error", name="erropage")
      * @param Request $request
      * @return Response
      */
@@ -111,7 +111,7 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * @Route("/cancelurl", name="cancelpage")
+     * @Route("/v1/cancelurl", name="cancelpage")
      * @param Request $request
      * @return Response
      */
@@ -123,7 +123,7 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * @Route("/successurl", name="successpage")
+     * @Route("/v1/successurl", name="successpage")
      * @param Request $request
      * @return Response
      */

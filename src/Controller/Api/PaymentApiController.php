@@ -77,7 +77,7 @@ class PaymentApiController extends AbstractFOSRestController
     }
 
     /**
-     * @Rest\Post("/callbackajax", name="notifyurlajax")
+     * @Rest\Post("/v1/callbackajax", name="notifyurlajax")
      * @param Request $request
      * @return Response
      */
