@@ -84,9 +84,10 @@ class PaymentApiController extends AbstractFOSRestController
     public function notifyurl(Request $request): Response
     {
         $this->logger->error("notify call");
-        $reference = $_POST['item_ref'];
+        $res = json_decode($request->getContent(), true);
+        $reference = $res['item_ref'];
         $this->logger->error($reference);
-        $statusbool = $_POST['status'];
+        $statusbool = $res['status'];
         $activation=$this->activationRepository->findOneBy(['reference'=>$reference,'status'=>Activation::PENDING]);
         $cardpending=$this->cardpendingRepository->findOneBy(['activation'=>$activation->getId()]);
         if ($statusbool == "Success") {
