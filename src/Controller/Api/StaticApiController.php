@@ -293,7 +293,7 @@ class StaticApiController extends AbstractFOSRestController
         return $this->handleView($view);
     }
     /**
-     * @Rest\Get("/v1/activations/agent/{id}", name="api_activations_customer_ajax")
+     * @Rest\Get("/v1/activations/agent/{id}", name="api_activations_agent_ajax")
      * @param Request $request
      * @return Response
      */
