@@ -272,7 +272,7 @@ class StaticApiController extends AbstractFOSRestController
         $cardcustomers=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
         $values = [];
         foreach ($cardcustomers as $cardCustomer){
-            $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard()]);
+            $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard(),'status'=>Activation::SUCCESS]);
 
             foreach ($cards as $card) {
                 $mod = "+".$card->getMonthto()." month";
