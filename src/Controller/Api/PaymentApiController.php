@@ -92,10 +92,10 @@ class PaymentApiController extends AbstractFOSRestController
         $cardpending=$this->cardpendingRepository->findOneBy(['activation'=>$activation->getId()]);
         if ($statusbool == "Success") {
           $activation->setStatus(Activation::SUCCESS);
-          $cardpending->setStatus(CardPending::SUCCESS);
+         // $cardpending->setStatus(CardPending::SUCCESS);
         }else{
             $activation->setStatus(Activation::ECHEC);
-            $cardpending->setStatus(CardPending::ECHEC);
+           // $cardpending->setStatus(CardPending::ECHEC);
             $this->doctrine->remove($cardpending);
         }
         $this->doctrine->flush();
