@@ -76,25 +76,28 @@
                 </li>
 
                 <li class="menu-title mt-2">Managements</li>
+                {% if is_granted('ROLE_ADMIN') %}
                 <li>
                     <a href="{{ path('agences') }}">
                         <i class="mdi mdi-archive-arrow-up"></i>
                         <span> Agences </span>
                     </a>
                 </li>
+                {% endif %}
                 <li>
                     <a href="{{ path('customers') }}">
                         <i class="mdi mdi-account-multiple"></i>
                         <span> Customers </span>
                     </a>
                 </li>
-
+                {% if is_granted('ROLE_ADMIN') %}
                 <li>
                     <a href="{{ path('agents') }}">
                         <i class="mdi mdi-account-key-outline"></i>
                         <span> Agents </span>
                     </a>
                 </li>
+                {% endif %}
 
                 <li class="menu-title mt-2">Cards</li>
                 <li>
@@ -109,6 +112,7 @@
                         <span> Bouquets </span>
                     </a>
                 </li>
+                {% if is_granted('ROLE_ADMIN') %}
                 <li class="menu-title mt-2">Activations</li>
 
                 <li>
@@ -131,6 +135,7 @@
                         </ul>
                     </div>
                 </li>
+                {% endif %}
 
 
             </ul>

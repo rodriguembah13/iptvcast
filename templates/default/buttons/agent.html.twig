@@ -1,4 +1,6 @@
 <div class="btn-group btn-group-sm float-end">
+    {% if is_granted('ROLE_ADMIN') %}<a class="btn btn-primary" href="{{ path('addwallet_card', {'id': row.id}) }}"><i class="me-2 icon-md fa fa-wallet"></i></a>
+    {% endfor %}
     <a class="btn btn-success" href="{{ path('agent_edit', {'id': row.id}) }}"><i class="me-2 icon-md fa fa-edit"></i></a>
     <a class="btn btn-danger"><i class="me-2 icon-md fa fa-trash"></i></a>
 </div>

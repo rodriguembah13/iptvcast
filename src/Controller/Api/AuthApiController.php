@@ -82,6 +82,7 @@ class AuthApiController extends AbstractFOSRestController
         $this->logger->info("--------------------------------M2");
         $body=[
             'id'=>$personnel->getId(),
+            'iduser'=>$user->getId(),
             'name'=>$user->getName(),
             'phone'=>$user->getPhone(),
             'agence'=>$personnel->getAgence()->getId(),

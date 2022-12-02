@@ -21,6 +21,7 @@ use App\Repository\CustomerRepository;
 use App\Repository\PersonnelRepository;
 use App\Service\EndpointService;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\NonUniqueResultException;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Psr\Log\LoggerInterface;
@@ -86,7 +87,7 @@ class StaticApiController extends AbstractFOSRestController
             $cards=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
             $valcar="";
             foreach ($cards as $cardCustomer){
-                $valcar=$valcar.";".$cardCustomer->getCard()->getNumerocard();
+                $valcar=$valcar.$cardCustomer->getCard()->getNumerocard().";";
             }
             $values[] = [
                 'id' => $customer->getId(),
@@ -142,7 +143,7 @@ class StaticApiController extends AbstractFOSRestController
             $cards=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
             $valcar="";
             foreach ($cards as $cardCustomer){
-                $valcar=$valcar.";".$cardCustomer->getCard()->getNumerocard();
+                $valcar=$valcar.$cardCustomer->getCard()->getNumerocard().";";
             }
             $values[] = [
                 'id' => $customer->getId(),
@@ -252,8 +253,9 @@ class StaticApiController extends AbstractFOSRestController
                 'name' => $card->getCard()->getName(),
                 'numero' => $card->getCard()->getNumerocard(),
                 'amount' => $card->getAmount(),
-                'created'=>$card->getCreatedAt()->format('Y-m-d h:m:s'),
-                'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m:s'),
+                'agent' => $card->getCreatedBy()->getCompte()->getName(),
+                'created'=>$card->getCreatedAt()->format('Y-m-d h:m'),
+                'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
                 'monthto' => $card->getMonthto(),
                 'id' => $card->getId(),
             ];
@@ -264,6 +266,7 @@ class StaticApiController extends AbstractFOSRestController
 
     /**
      * @Rest\Get("/v1/activations/customer/{id}", name="api_activations_customer_ajax")
+     * @param Customer $customer
      * @param Request $request
      * @return Response
      */
@@ -273,16 +276,17 @@ class StaticApiController extends AbstractFOSRestController
         $values = [];
         foreach ($cardcustomers as $cardCustomer){
             $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard(),'status'=>Activation::SUCCESS]);
-
             foreach ($cards as $card) {
+                $this->logger->info("Act1");
                 $mod = "+".$card->getMonthto()." month";
                 $values[] = [
                     'name' => $card->getCard()->getName(),
                     'numero' => $card->getCard()->getNumerocard(),
                     'amount' => $card->getAmount(),
+                    'agent' => $card->getCreatedBy()->getCompte()->getName(),
                     'status'=>$card->getStatus(),
-                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m:s'),
-                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m:s'),
+                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m'),
+                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
                     'monthto' => $card->getMonthto(),
                     'id' => $card->getId(),
                 ];
@@ -299,16 +303,7 @@ class StaticApiController extends AbstractFOSRestController
      */
     public function activationsagence(Personnel $personnel,Request $request): Response
     {
-        $cardcustomers_=$this->cardcustomerRepository->findBy([]);
-        $cardcustomers= array_filter($cardcustomers_,function ($item) use ($personnel){
-           if ($item->getCustomer()->getAgence()=== $personnel->getAgence()){
-               return true;
-           }
-           return  false;
-        });
-        $values = [];
-        foreach ($cardcustomers as $cardCustomer){
-            $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard(),'status'=>Activation::SUCCESS]);
+            $cards = $this->activationRepository->findBy(['status'=>Activation::SUCCESS,'createdBy'=>$personnel]);
 
             foreach ($cards as $card) {
                 $mod = "+".$card->getMonthto()." month";
@@ -317,19 +312,22 @@ class StaticApiController extends AbstractFOSRestController
                     'numero' => $card->getCard()->getNumerocard(),
                     'amount' => $card->getAmount(),
                     'status'=>$card->getStatus(),
-                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m:s'),
-                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m:s'),
+                    'agent' => $card->getCreatedBy()->getCompte()->getName(),
+                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m'),
+                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
                     'monthto' => $card->getMonthto(),
                     'id' => $card->getId(),
                 ];
             }
-        }
+
 
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/cards/customer/{id}", name="api_customer_cards")
+     * @param Customer $customer
      * @return Response
      */
     public function getCardBycustomer(Customer $customer)
@@ -462,10 +460,12 @@ class StaticApiController extends AbstractFOSRestController
         ], Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Post("/v1/cards/add", name="api_cards_ajax")
      * @param Request $request
      * @return Response
+     * @throws \Exception
      */
     public function addCard(Request $request): Response
     {
@@ -490,6 +490,52 @@ class StaticApiController extends AbstractFOSRestController
             'message'=>"Successful request",
         ];
         $view = $this->view($response, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Rest\Get("/v1/bouquets/customer/{id}", name="api_bouquet_customer_status")
+     * @param Customer $customer
+     * @return Response
+     * @throws NonUniqueResultException
+     */
+    public function getStatusBouquetcustomer(Customer $customer)
+    {
+        $cards = $this->cardcustomerRepository->findBy(['customer'=>$customer]);
+        $bouquets=$this->bouquetRepository->findAll();
+        $values = [];
+        foreach ($cards as $card){
+            $valbouquet=[];
+            $activation=$this->activationRepository->findByCustomer($card->getCard());
+
+            foreach ($bouquets as $bouquet){
+                if (is_null($activation)){
+                    $this->logger->info("B1");
+                    $mod = "+0 month";
+                    $bouqs=[];
+                    $status=false;
+                }else{
+                    $this->logger->info("B0");
+                    $mod = "+".$activation->getMonthto()." month";
+                    $status=in_array($bouquet->getNumero(),$activation->getBouquets());
+                }
+                $valbouquet[]=[
+                    'name' => $bouquet->getDescription(),
+                    'numero' => $bouquet->getNumero(),
+                    'price' => $status?0:1,
+                    'id' => $bouquet->getId(),
+                    'created' => $status?$activation->getCreatedAt()->format('Y-m-d h:m'):" ",
+                    'expired' => $status?$activation->getCreatedAt()->modify($mod)->format('Y-m-d h:m'):" ",
+                    'bouquetid' => $bouquet->getBouquetid(),
+                ];
+            }
+            $values[]=[
+              'card'=>$card->getCard()->getNumerocard(),
+              'bouquets'=> $valbouquet
+            ];
+        }
+
+        $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
 }

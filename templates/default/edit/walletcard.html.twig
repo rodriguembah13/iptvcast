@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+
+{% endblock %}
+
+{% block body %}
+    <div class="card">
+        <div class="card-header">
+           <h2>Agent: {{ personnel.compte.name }}</h2>  <h4>Solde:{{ personnel.solde }}</h4>
+        </div>
+        <form method="post">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <label for="exampleInputUsername2" class="col-sm-3 col-form-label">Montant</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="amount" class="form-control" id="amount_card" placeholder="0.0">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary me-2" id="submit_chanel">Valider</button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Date transaction</th>
+                    <th>Montant</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in recharges %}
+                    <tr>
+                        <td>{{ item.createdAt | date('Y-m-d h:m') }}</td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.personnel.solde }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+

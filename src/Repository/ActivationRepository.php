@@ -3,7 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Activation;
+use App\Entity\Card;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -49,6 +51,25 @@ class ActivationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult()
         ;
+    }
+
+    /**
+     * @param Card $card
+     * @return Activation Returns an array of Activation objects
+     * @throws NonUniqueResultException
+     */
+    public function findByCustomer(Card $card)
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.card = :card')
+            ->andWhere('a.status = :status')
+            ->setParameter('status',Activation::SUCCESS)
+            ->setParameter('card',$card)
+            ->setMaxResults(1)
+                ->orderBy('a.id', 'DESC')
+                ->getQuery()
+                ->getOneOrNullResult()
+            ;
     }
 
 //    public function findOneBySomeField($value): ?Activation

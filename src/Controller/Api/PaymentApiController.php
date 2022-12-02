@@ -15,6 +15,7 @@ use App\Repository\CardCustomerRepository;
 use App\Repository\CardPendingRepository;
 use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
+use App\Repository\PersonnelRepository;
 use App\Repository\UserRepository;
 use App\Service\paiement\ClientPaymoo;
 use App\Service\paiement\EkolopayService;
@@ -41,6 +42,7 @@ class PaymentApiController extends AbstractFOSRestController
     private $cardcustomerRepository;
     private $activationRepository;
     private $cardpendingRepository;
+    private $personnelRepository;
 
     /**
      * PaymentApiController constructor.
@@ -57,7 +59,7 @@ class PaymentApiController extends AbstractFOSRestController
     public function __construct(CardRepository $cardRepository,
                                 FlutterwaveService $flutterwaveService,
                                 UserRepository $userRepository, ParameterBagInterface $params,
-                                BouquetRepository $bouquetRepository,
+                                BouquetRepository $bouquetRepository,PersonnelRepository $personnelRepository,
                                 CardPendingRepository $cardPendingRepository,
                                 LoggerInterface $logger, CardCustomerRepository $cardCustomerRepository, ActivationRepository $activationRepository,
                                 CustomerRepository $customerRepository,
@@ -73,6 +75,7 @@ class PaymentApiController extends AbstractFOSRestController
         $this->cardcustomerRepository = $cardCustomerRepository;
         $this->activationRepository = $activationRepository;
         $this->cardpendingRepository=$cardPendingRepository;
+        $this->personnelRepository=$personnelRepository;
         $this->params = $params;
     }
 
@@ -114,6 +117,7 @@ class PaymentApiController extends AbstractFOSRestController
         $produts=$data['bouquets'];
         $amount=$data['amount'];
         $month=$data['month'];
+        $personnel=$this->personnelRepository->find($data['agent']);
         $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $reference = "";
         $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -144,7 +148,7 @@ class PaymentApiController extends AbstractFOSRestController
         $client = new ClientPaymoo();
         $response = $client->postfinal("payment_url", $data);
         if ($response['response'] == "success") {
-            $this->createActivate($cardcustomer, $reference, $amount,$produts,$month);
+            $this->createActivate($cardcustomer, $reference, $amount,$produts,$month,$personnel,Activation::PENDING);
             $url = $response["payment_url"];
             $this->logger->info($url);
             $link_array = explode('/', $url);
@@ -163,7 +167,49 @@ class PaymentApiController extends AbstractFOSRestController
             return $this->handleView($view);
         }
     }
-    function createActivate(CardCustomer $card, $reference, $amount,$produts,$month)
+    /**
+     * @Rest\Post("/v1/activations/cash", name="api_activations_cash_get_ajax")
+     * @param Request $request
+     * @return Response
+     */
+    public function cashactivatecard(Request $request): Response
+    {
+        $res = json_decode($request->getContent(), true);
+        $data = $res['data'];
+        $produts = $data['bouquets'];
+        $amount = $data['amount'];
+        $month = $data['month'];
+        $this->logger->error("M0");
+        $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
+        $this->logger->error("M1");
+        $personnel=$this->personnelRepository->find($data['agent']);
+        $this->logger->error("M2");
+        $reference = "";
+        $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+        for ($i = 1; $i <= 12; ++$i) {
+            $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
+        }
+        if ($personnel->getSolde()>=$amount){
+        $this->logger->error("M3");
+            $this->createActivate($cardcustomer, $reference, $amount,$produts,$month,$personnel,Activation::SUCCESS);
+            $response = [
+                'url'=>"",
+                'message'=>'Successful',
+                'code'=>200
+            ];
+            $view = $this->view($response, Response::HTTP_OK, []);
+        }else{
+         $this->logger->error("M4");
+            $response = [
+                'url'=>"",
+                'message'=>'Solde insuficant',
+                'code'=>500
+            ];
+            $view = $this->view($response, 404, []);
+        }
+        return $this->handleView($view);
+    }
+    function createActivate(CardCustomer $card, $reference, $amount,$produts,$month,$personnel,$status)
     {
         $actiavtion = new Activation();
         $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
@@ -173,8 +219,9 @@ class PaymentApiController extends AbstractFOSRestController
         //$month = 1;
         $actiavtion->setMonthto($month);
         $actiavtion->setReference($reference);
-        $actiavtion->setStatus(Activation::PENDING);
+        $actiavtion->setStatus($status);
         $actiavtion->setBouquets($produts);
+        $actiavtion->setCreatedBy($personnel);
         $this->doctrine->persist($actiavtion);
         for ($i=0;$i<sizeof($produts);$i++){
             $cardpending = new CardPending();

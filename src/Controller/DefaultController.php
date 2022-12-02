@@ -10,6 +10,7 @@ use App\Entity\CardCustomer;
 use App\Entity\CardPending;
 use App\Entity\Customer;
 use App\Entity\Personnel;
+use App\Entity\RechargeWallet;
 use App\Entity\Souscription;
 use App\Entity\User;
 use App\Repository\AgenceRepository;
@@ -17,6 +18,8 @@ use App\Repository\BouquetRepository;
 use App\Repository\CardCustomerRepository;
 use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
+use App\Repository\PersonnelRepository;
+use App\Repository\RechargeWalletRepository;
 use App\Repository\SouscriptionRepository;
 use App\Service\EndpointService;
 use App\Service\paiement\ClientPaymoo;
@@ -51,6 +54,8 @@ class DefaultController extends AbstractController
     private $souscriptionRepository;
     private $cardcustomerRepository;
     private $agenceRepository;
+    private $personnelRepository;
+    private $walletrechargeRepository;
     private $cardRepository;
     private $passwordEncoder;
     private $logger;
@@ -63,10 +68,10 @@ class DefaultController extends AbstractController
      * @param DataTableFactory $dataTableFactory
      * @param ParameterBagInterface $parameterBag
      */
-    public function __construct(CardRepository $cardRepository,
+    public function __construct(CardRepository $cardRepository,RechargeWalletRepository $rechargeWalletRepository,
                                 CardCustomerRepository $cardCustomerRepository,
                                 SouscriptionRepository $souscriptionRepository,
-                                CustomerRepository $customerRepository,
+                                CustomerRepository $customerRepository,PersonnelRepository $personnelRepository,
                                 LoggerInterface $logger, UserPasswordHasherInterface $passwordEncoder,
                                 AgenceRepository $agenceRepository,
                                 BouquetRepository $bouquetRepository, EndpointService $endpointService, DataTableFactory $dataTableFactory, ParameterBagInterface $parameterBag)
@@ -81,7 +86,9 @@ class DefaultController extends AbstractController
         $this->cardcustomerRepository = $cardCustomerRepository;
         $this->cardRepository = $cardRepository;
         $this->agenceRepository = $agenceRepository;
+        $this->personnelRepository=$personnelRepository;
         $this->passwordEncoder = $passwordEncoder;
+        $this->walletrechargeRepository=$rechargeWalletRepository;
     }
 
     /**
@@ -186,7 +193,9 @@ class DefaultController extends AbstractController
         $table = $this->dataTableFactory->create()
             ->add('customer', TextColumn::class, [
                 'label' => 'Customer',
-                'field' => 'customer.compte.name'
+                'field' => 'customer.compte.name',
+                'orderField'=>'customer.compte.name',
+                'searchable'=>false
             ])
             ->add('numero', TextColumn::class, [
                 'label' => 'CardID',
@@ -725,40 +734,54 @@ class DefaultController extends AbstractController
             for ($i = 1; $i <= 12; ++$i) {
                 $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
             }
-            if (strtolower($request->get('method')) == 'mobil_money') {
-                $currency = "XAF";
-            } else {
-                $currency = "USD";
+            if ($request->get('method')=="point_recharge"){
+                $personnel=$this->personnelRepository->findOneBy(['compte'=>$this->getUser()]);
+                if (is_null($personnel)){
+                    $this->addFlash("error","Vous avez pas suffissament des droits pour effectuer ce paiement");
+                }else{
+                    $entityManager = $this->getDoctrine()->getManager();
+                    $personnel->setSolde($personnel->getSolde()+$request->get('amount'));
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $entityManager->flush();
+                    return $this->redirectToRoute('successpage');
+                }
+            }else{
+                if (strtolower($request->get('method')) == 'mobil_money') {
+                    $currency = "XAF";
+                } else {
+                    $currency = "USD";
+                }
+                $data = [
+                    'amount' => $request->get('amount'),
+                    'currency_code' => $currency,
+                    'ccode' => 'CM',
+                    'lang' => 'en',
+                    'item_ref' => $reference,
+                    'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
+                    'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
+                    'email' => 'exemple@email.com',
+                    'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
+                    'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
+                    'last_name' => 'Surname',
+                    'public_key' => $this->params->get('PAYMONNEY_KEY'),
+                    'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
+                    'environement' => 'test'
+                ];
+                $client = new ClientPaymoo();
+                $response = $client->postfinal("payment_url", $data);
+                $this->logger->info($response['response']);
+                $this->logger->info($request->get('amount'));
+                if ($response['response'] == "success") {
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $url = $response["payment_url"];
+                    $this->logger->info($url);
+                    $link_array = explode('/', $url);
+                    return $this->redirect($url);
+                } else {
+                    return $this->redirectToRoute('erropage');
+                }
             }
-            $data = [
-                'amount' => $request->get('amount'),
-                'currency_code' => $currency,
-                'ccode' => 'CM',
-                'lang' => 'en',
-                'item_ref' => $reference,
-                'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
-                'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
-                'email' => 'exemple@email.com',
-                'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
-                'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
-                'last_name' => 'Surname',
-                'public_key' => $this->params->get('PAYMONNEY_KEY'),
-                'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
-                'environement' => 'test'
-            ];
-            $client = new ClientPaymoo();
-            $response = $client->postfinal("payment_url", $data);
-            $this->logger->info($response['response']);
-            $this->logger->info($request->get('amount'));
-            if ($response['response'] == "success") {
-                $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
-                $url = $response["payment_url"];
-                $this->logger->info($url);
-                $link_array = explode('/', $url);
-                return $this->redirect($url);
-            } else {
-                return $this->redirectToRoute('erropage');
-            }
+
         }
 
         return $this->render('default/edit/activatecard.html.twig', [
@@ -782,39 +805,55 @@ class DefaultController extends AbstractController
             for ($i = 1; $i <= 12; ++$i) {
                 $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
             }
-            if (strtolower($request->get('method')) == 'mobil_money') {
-                $currency = "XAF";
-            } else {
-                $currency = "USD";
+            if ($request->get('method')=="point_recharge"){
+                $personnel=$this->personnelRepository->findOneBy(['compte'=>$this->getUser()]);
+                if (is_null($personnel)){
+                    $this->addFlash("error","Vous avez pas suffissament des droits pour effectuer ce paiement");
+                }else{
+                    $entityManager = $this->getDoctrine()->getManager();
+                    $personnel->setSolde($personnel->getSolde()+$request->get('amount'));
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $entityManager->flush();
+                    return $this->redirectToRoute('successpage');
+                }
+            }else{
+
+                if (strtolower($request->get('method')) == 'mobil_money') {
+                    $currency = "XAF";
+                } else {
+                    $currency = "USD";
+                }
+                $data = [
+                    'amount' => $request->get('amount'),
+                    'currency_code' => $currency,
+                    'ccode' => 'CM',
+                    'lang' => 'en',
+                    'item_ref' => $reference,
+                    'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
+                    'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
+                    'email' => 'exemple@email.com',
+                    'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
+                    'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
+                    'last_name' => 'Surname',
+                    'public_key' => $this->params->get('PAYMONNEY_KEY'),
+                    'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
+                    'environement' => 'test'
+                ];
+                $client = new ClientPaymoo();
+                $response = $client->postfinal("payment_url", $data);
+                $this->logger->info(json_encode($response));
+                if ($response['response'] == "success") {
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $url = $response["payment_url"];
+                    $this->logger->info($url);
+                    $link_array = explode('/', $url);
+                    return $this->redirect($url);
+                } else {
+                    return $this->redirectToRoute('erropage');
+                }
             }
-            $data = [
-                'amount' => $request->get('amount'),
-                'currency_code' => $currency,
-                'ccode' => 'CM',
-                'lang' => 'en',
-                'item_ref' => $reference,
-                'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
-                'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
-                'email' => 'exemple@email.com',
-                'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
-                'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
-                'last_name' => 'Surname',
-                'public_key' => $this->params->get('PAYMONNEY_KEY'),
-                'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
-                'environement' => 'test'
-            ];
-            $client = new ClientPaymoo();
-            $response = $client->postfinal("payment_url", $data);
-            $this->logger->info(json_encode($response));
-            if ($response['response'] == "success") {
-                $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
-                $url = $response["payment_url"];
-                $this->logger->info($url);
-                $link_array = explode('/', $url);
-                return $this->redirect($url);
-            } else {
-                return $this->redirectToRoute('erropage');
-            }
+
+
         }
         return $this->render('default/edit/addactivatefromcard.html.twig', [
             'title' => "Activate card",
@@ -822,6 +861,8 @@ class DefaultController extends AbstractController
             'bouquets' => $this->bouquetRepository->findAll()
         ]);
     }
+
+
 
     /**
      * @Route("/customers/activatecard/{id}", name="customer_activate_card")
@@ -842,39 +883,54 @@ class DefaultController extends AbstractController
             for ($i = 1; $i <= 12; ++$i) {
                 $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
             }
-            if (strtolower($request->get('method')) == 'mobil_money') {
-                $currency = "XAF";
-            } else {
-                $currency = "USD";
+            if ($request->get('method')=="point_recharge"){
+                $personnel=$this->personnelRepository->findOneBy(['compte'=>$this->getUser()]);
+                if (is_null($personnel)){
+                    $this->addFlash("error","Vous avez pas suffissament des droits pour effectuer ce paiement");
+                }else{
+                    $entityManager = $this->getDoctrine()->getManager();
+                    $personnel->setSolde($personnel->getSolde()+$request->get('amount'));
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $entityManager->flush();
+                    return $this->redirectToRoute('successpage');
+                }
+            }else{
+
+                if (strtolower($request->get('method')) == 'mobil_money') {
+                    $currency = "XAF";
+                } else {
+                    $currency = "USD";
+                }
+                $data = [
+                    'amount' => $request->get('amount'),
+                    'currency_code' => $currency,
+                    'ccode' => 'CM',
+                    'lang' => 'en',
+                    'item_ref' => $reference,
+                    'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
+                    'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
+                    'email' => 'exemple@email.com',
+                    'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
+                    'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
+                    'last_name' => 'Surname',
+                    'public_key' => $this->params->get('PAYMONNEY_KEY'),
+                    'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
+                    'environement' => 'test'
+                ];
+                $client = new ClientPaymoo();
+                $response = $client->postfinal("payment_url", $data);
+                $this->logger->info($response['response']);
+                if ($response['response'] == "success") {
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $url = $response["payment_url"];
+                    $this->logger->info($url);
+                    $link_array = explode('/', $url);
+                    return $this->redirect($url);
+                } else {
+                    return $this->redirectToRoute('erropage');
+                }
             }
-            $data = [
-                'amount' => $request->get('amount'),
-                'currency_code' => $currency,
-                'ccode' => 'CM',
-                'lang' => 'en',
-                'item_ref' => $reference,
-                'item_name' => $cardcustomer->getCard()->getName() . " :" . $cardcustomer->getCard()->getNumerocard(),
-                'description' => 'Activation card:' . $cardcustomer->getCard()->getNumerocard(),
-                'email' => 'exemple@email.com',
-                'phone' => '+237' . $cardcustomer->getCustomer()->getCompte()->getPhone(),
-                'first_name' => $cardcustomer->getCustomer()->getCompte()->getName(),
-                'last_name' => 'Surname',
-                'public_key' => $this->params->get('PAYMONNEY_KEY'),
-                'logo' => 'http://195.24.222.202:9090/assets/img/logo_white.png',
-                'environement' => 'test'
-            ];
-            $client = new ClientPaymoo();
-            $response = $client->postfinal("payment_url", $data);
-            $this->logger->info($response['response']);
-            if ($response['response'] == "success") {
-                $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
-                $url = $response["payment_url"];
-                $this->logger->info($url);
-                $link_array = explode('/', $url);
-                return $this->redirect($url);
-            } else {
-                return $this->redirectToRoute('erropage');
-            }
+
         }
 
         return $this->render('default/edit/activatecardcustomer.html.twig', [
@@ -922,7 +978,7 @@ class DefaultController extends AbstractController
     /**
      * @Route("/getpricebouquet/ajax", name="getpricebouquet_ajax", methods={"GET"})
      */
-    public function getcandidatAjax(Request $request): JsonResponse
+    public function getpricebouquetAjax(Request $request): JsonResponse
     {
         $bqts = $request->get('bouquets');
         $amount = 0.0;
@@ -1072,6 +1128,31 @@ class DefaultController extends AbstractController
         return $this->render('default/edit/importcustomer.html.twig', [
             'title' => "Import customer",
             'customers'=>$customers
+        ]);
+    }
+    /**
+     * @Route("/agent/addwallet/{id}", name="addwallet_card")
+     * @param Personnel $personnel
+     * @param Request $request
+     * @return Response
+     */
+    public function wallet_card(Personnel $personnel, Request $request): Response
+    {
+        if ($request->getMethod()=="POST"){
+            $entityManager = $this->getDoctrine()->getManager();
+            $wallet=new RechargeWallet();
+            $wallet->setAmount($request->get('amount'));
+            $wallet->setPersonnel($personnel);
+            $personnel->setSolde($personnel->getSolde()+$request->get('amount'));
+            $wallet->setCreatedAt(new \DateTimeImmutable('now',new DateTimeZone('Africa/Douala')));
+            $entityManager->persist($wallet);
+            $entityManager->flush();
+        }
+        $wallets=$this->walletrechargeRepository->findBy(['personnel'=>$personnel]);
+        return $this->render('default/edit/walletcard.html.twig', [
+            'title' => "Wallet agent",
+            'personnel' => $personnel,
+            'recharges' => $wallets
         ]);
     }
 }
