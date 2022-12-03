@@ -445,6 +445,7 @@ class DefaultController extends AbstractController
             ])
             ->add('phone', TextColumn::class, [
                 'label' => 'Phone',
+                'field' => 'compte.phone'
             ])
             ->add('id', TwigColumn::class, [
                 'className' => 'buttons',
