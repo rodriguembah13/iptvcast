@@ -190,8 +190,9 @@ class PaymentApiController extends AbstractFOSRestController
             $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
         }
         if ($personnel->getSolde()>=$amount){
-        $this->logger->error("M3");
             $this->createActivate($cardcustomer, $reference, $amount,$produts,$month,$personnel,Activation::SUCCESS);
+           $personnel->setSolde($personnel->getSolde()-$amount);
+           $this->doctrine->flush();
             $response = [
                 'url'=>"",
                 'message'=>'Successful',
