@@ -19,6 +19,7 @@ use App\Repository\CardCustomerRepository;
 use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\PersonnelRepository;
+use App\Repository\RechargeWalletRepository;
 use App\Service\EndpointService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
@@ -44,6 +45,7 @@ class StaticApiController extends AbstractFOSRestController
     private $doctrine;
     private $passwordEncoder;
     private $activationRepository;
+    private $rechargeRepository;
 
     /**
      * IptvApiController constructor.
@@ -55,11 +57,11 @@ class StaticApiController extends AbstractFOSRestController
      * @param EndpointService $endpointService
      * @param CustomerRepository $customerRepository
      */
-    public function __construct(BouquetRepository $bouquetRepository, LoggerInterface $logger,
-                                EntityManagerInterface $entityManager,ActivationRepository $activationRepository,
-                                AgenceRepository $agenceRepository,PersonnelRepository $personnelRepository,
+    public function __construct(RechargeWalletRepository $rechargeWalletRepository, BouquetRepository $bouquetRepository, LoggerInterface $logger,
+                                EntityManagerInterface $entityManager, ActivationRepository $activationRepository,
+                                AgenceRepository $agenceRepository, PersonnelRepository $personnelRepository,
                                 CardCustomerRepository $cardCustomerRepository, CardRepository $cardRepository,
-                                EndpointService $endpointService,UserPasswordHasherInterface $passwordEncoder,
+                                EndpointService $endpointService, UserPasswordHasherInterface $passwordEncoder,
                                 CustomerRepository $customerRepository)
     {
         $this->logger = $logger;
@@ -68,11 +70,12 @@ class StaticApiController extends AbstractFOSRestController
         $this->customerRepository = $customerRepository;
         $this->cardRepository = $cardRepository;
         $this->cardcustomerRepository = $cardCustomerRepository;
-        $this->agenceRepository=$agenceRepository;
-        $this->personnelRepository=$personnelRepository;
-        $this->doctrine=$entityManager;
+        $this->agenceRepository = $agenceRepository;
+        $this->personnelRepository = $personnelRepository;
+        $this->doctrine = $entityManager;
         $this->passwordEncoder = $passwordEncoder;
-        $this->activationRepository=$activationRepository;
+        $this->activationRepository = $activationRepository;
+        $this->rechargeRepository = $rechargeWalletRepository;
     }
 
     /**
@@ -84,10 +87,10 @@ class StaticApiController extends AbstractFOSRestController
         $customers = $this->customerRepository->findAllOrder();
         $values = [];
         foreach ($customers as $customer) {
-            $cards=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
-            $valcar="";
-            foreach ($cards as $cardCustomer){
-                $valcar=$valcar.$cardCustomer->getCard()->getNumerocard().";";
+            $cards = $this->cardcustomerRepository->findBy(['customer' => $customer]);
+            $valcar = "";
+            foreach ($cards as $cardCustomer) {
+                $valcar = $valcar . $cardCustomer->getCard()->getNumerocard() . ";";
             }
             $values[] = [
                 'id' => $customer->getId(),
@@ -103,24 +106,26 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/customers/{id}/one", name="api_one_customers")
      * @return Response
      */
     public function getOneCustomer(Customer $customer)
     {
-            $values = [
-                'id' => $customer->getId(),
-                'name' => $customer->getCompte()->getName(),
-                'phone' => $customer->getCompte()->getPhone(),
-                'email' => $customer->getCompte()->getEmail(),
-                'agence' => $customer->getAgence()->getName(),
-                'address' => $customer->getAddress(),
-                'city' => $customer->getCity()
-            ];
+        $values = [
+            'id' => $customer->getId(),
+            'name' => $customer->getCompte()->getName(),
+            'phone' => $customer->getCompte()->getPhone(),
+            'email' => $customer->getCompte()->getEmail(),
+            'agence' => $customer->getAgence()->getName(),
+            'address' => $customer->getAddress(),
+            'city' => $customer->getCity()
+        ];
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/customers/search", name="api_search_customers")
      * @return Response
@@ -128,22 +133,22 @@ class StaticApiController extends AbstractFOSRestController
     public function searchCustomers(Request $request)
     {
         $this->logger->info($request->get('q'));
-        if (is_numeric($request->get('q'))){
+        if (is_numeric($request->get('q'))) {
             $this->logger->info("Je suis ici");
             $customers_ = $this->cardcustomerRepository->searchCardCustomer($request->get('q'));
-            $customers =  array_map(function ($item){
+            $customers = array_map(function ($item) {
                 return $item->getCustomer();
-            },$customers_);
-        }else{
+            }, $customers_);
+        } else {
             $this->logger->info("Je suis iciM2");
             $customers = $this->customerRepository->searchCustomer($request->get('q'));
         }
-             $values = [];
+        $values = [];
         foreach ($customers as $customer) {
-            $cards=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
-            $valcar="";
-            foreach ($cards as $cardCustomer){
-                $valcar=$valcar.$cardCustomer->getCard()->getNumerocard().";";
+            $cards = $this->cardcustomerRepository->findBy(['customer' => $customer]);
+            $valcar = "";
+            foreach ($cards as $cardCustomer) {
+                $valcar = $valcar . $cardCustomer->getCard()->getNumerocard() . ";";
             }
             $values[] = [
                 'id' => $customer->getId(),
@@ -159,6 +164,7 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/agences", name="api_agences")
      * @return Response
@@ -179,6 +185,7 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/personnels", name="api_personnels")
      * @return Response
@@ -199,6 +206,7 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/bouquets", name="api_bouquets")
      * @return Response
@@ -219,6 +227,7 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/cards", name="api_cards")
      * @return Response
@@ -238,6 +247,7 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/activations", name="api_activations_ajax")
      * @param Request $request
@@ -248,14 +258,14 @@ class StaticApiController extends AbstractFOSRestController
         $cards = $this->activationRepository->findByAllorder();
         $values = [];
         foreach ($cards as $card) {
-            $mod = "+".$card->getMonthto()." month";
+            $mod = "+" . $card->getMonthto() . " month";
             $values[] = [
                 'name' => $card->getCard()->getName(),
                 'numero' => $card->getCard()->getNumerocard(),
                 'amount' => $card->getAmount(),
                 'agent' => $card->getCreatedBy()->getCompte()->getName(),
-                'created'=>$card->getCreatedAt()->format('Y-m-d h:m'),
-                'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
+                'created' => $card->getCreatedAt()->format('Y-m-d h:m'),
+                'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
                 'monthto' => $card->getMonthto(),
                 'id' => $card->getId(),
             ];
@@ -270,23 +280,23 @@ class StaticApiController extends AbstractFOSRestController
      * @param Request $request
      * @return Response
      */
-    public function activationscustomer(Customer $customer,Request $request): Response
+    public function activationscustomer(Customer $customer, Request $request): Response
     {
-        $cardcustomers=$this->cardcustomerRepository->findBy(['customer'=>$customer]);
+        $cardcustomers = $this->cardcustomerRepository->findBy(['customer' => $customer]);
         $values = [];
-        foreach ($cardcustomers as $cardCustomer){
-            $cards = $this->activationRepository->findBy(['card'=>$cardCustomer->getCard(),'status'=>Activation::SUCCESS]);
+        foreach ($cardcustomers as $cardCustomer) {
+            $cards = $this->activationRepository->findBy(['card' => $cardCustomer->getCard(), 'status' => Activation::SUCCESS]);
             foreach ($cards as $card) {
                 $this->logger->info("Act1");
-                $mod = "+".$card->getMonthto()." month";
+                $mod = "+" . $card->getMonthto() . " month";
                 $values[] = [
                     'name' => $card->getCard()->getName(),
                     'numero' => $card->getCard()->getNumerocard(),
                     'amount' => $card->getAmount(),
                     'agent' => $card->getCreatedBy()->getCompte()->getName(),
-                    'status'=>$card->getStatus(),
-                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m'),
-                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
+                    'status' => $card->getStatus(),
+                    'created' => $card->getCreatedAt()->format('Y-m-d h:m'),
+                    'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
                     'monthto' => $card->getMonthto(),
                     'id' => $card->getId(),
                 ];
@@ -296,29 +306,30 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Get("/v1/activations/agent/{id}", name="api_activations_agent_ajax")
      * @param Request $request
      * @return Response
      */
-    public function activationsagence(Personnel $personnel,Request $request): Response
+    public function activationsagence(Personnel $personnel, Request $request): Response
     {
-            $cards = $this->activationRepository->findBy(['status'=>Activation::SUCCESS,'createdBy'=>$personnel]);
+        $cards = $this->activationRepository->findBy(['status' => Activation::SUCCESS, 'createdBy' => $personnel]);
 
-            foreach ($cards as $card) {
-                $mod = "+".$card->getMonthto()." month";
-                $values[] = [
-                    'name' => $card->getCard()->getName(),
-                    'numero' => $card->getCard()->getNumerocard(),
-                    'amount' => $card->getAmount(),
-                    'status'=>$card->getStatus(),
-                    'agent' => $card->getCreatedBy()->getCompte()->getName(),
-                    'created'=>$card->getCreatedAt()->format('Y-m-d h:m'),
-                    'expired'=>$card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
-                    'monthto' => $card->getMonthto(),
-                    'id' => $card->getId(),
-                ];
-            }
+        foreach ($cards as $card) {
+            $mod = "+" . $card->getMonthto() . " month";
+            $values[] = [
+                'name' => $card->getCard()->getName(),
+                'numero' => $card->getCard()->getNumerocard(),
+                'amount' => $card->getAmount(),
+                'status' => $card->getStatus(),
+                'agent' => $card->getCreatedBy()->getCompte()->getName(),
+                'created' => $card->getCreatedAt()->format('Y-m-d h:m'),
+                'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
+                'monthto' => $card->getMonthto(),
+                'id' => $card->getId(),
+            ];
+        }
 
 
         $view = $this->view($values, Response::HTTP_OK, []);
@@ -332,7 +343,7 @@ class StaticApiController extends AbstractFOSRestController
      */
     public function getCardBycustomer(Customer $customer)
     {
-        $cards = $this->cardcustomerRepository->findBy(['customer'=>$customer]);
+        $cards = $this->cardcustomerRepository->findBy(['customer' => $customer]);
         $values = [];
         foreach ($cards as $card) {
             $values[] = [
@@ -345,6 +356,7 @@ class StaticApiController extends AbstractFOSRestController
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Post("/v1/personnels", name="api_personnels_ajax")
      * @param Request $request
@@ -353,35 +365,36 @@ class StaticApiController extends AbstractFOSRestController
     public function postpersonnels(Request $request): Response
     {
         $res = json_decode($request->getContent(), true);
-        $data=$res['data'];
-        $agence=$this->agenceRepository->find($data['agence']);
-        if (!is_null($data['id'])){
-            $personnel=$this->personnelRepository->find($data['id']);
-            $compte=$personnel->getCompte();
-        }else{
-            $compte=new User();
+        $data = $res['data'];
+        $agence = $this->agenceRepository->find($data['agence']);
+        if (!is_null($data['id'])) {
+            $personnel = $this->personnelRepository->find($data['id']);
+            $compte = $personnel->getCompte();
+        } else {
+            $compte = new User();
             $compte->setEmail($data['email']);
             $compte->setUsername($data['email']);
             $encodedPassword = $this->passwordEncoder->hashPassword($compte, "cast12345");
             $compte->setRoles(['ROLE_AGENT']);
             $compte->setPassword($encodedPassword);
             $this->doctrine->persist($compte);
-            $personnel=new Personnel();
+            $personnel = new Personnel();
             $personnel->setCompte($compte);
-            $personnel->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
+            $personnel->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
             $this->doctrine->persist($personnel);
         }
         $personnel->setAgence($agence);
         $compte->setName($data['name']);
         $compte->setPhone($data['phone']);
         $this->doctrine->flush();
-        $response=[
-            'status'=>200,
-            'message'=>"Successful request"
+        $response = [
+            'status' => 200,
+            'message' => "Successful request"
         ];
         $view = $this->view($response, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
+
     /**
      * @Rest\Post("/v1/agences", name="api_agences_post_ajax")
      * @param Request $request
@@ -389,11 +402,11 @@ class StaticApiController extends AbstractFOSRestController
     public function postagences(Request $request)
     {
         $res = json_decode($request->getContent(), true);
-        $data=$res['data'];
-        if (!is_null($data['id'])){
-            $agence=$this->agenceRepository->find($data['id']);
-        }else{
-            $agence=new Agence();
+        $data = $res['data'];
+        if (!is_null($data['id'])) {
+            $agence = $this->agenceRepository->find($data['id']);
+        } else {
+            $agence = new Agence();
             $this->doctrine->persist($agence);
         }
         $agence->setName($data['name']);
@@ -401,9 +414,9 @@ class StaticApiController extends AbstractFOSRestController
         $agence->setAddress($data['address']);
         $agence->setCity($data['city']);
         $this->doctrine->flush();
-        $response=[
-            'status'=>200,
-            'message'=>"Successful request"
+        $response = [
+            'status' => 200,
+            'message' => "Successful request"
         ];
         $view = $this->view($response, Response::HTTP_OK, []);
         return $this->handleView($view);
@@ -418,25 +431,25 @@ class StaticApiController extends AbstractFOSRestController
     public function postcustomers(Request $request): Response
     {
         $res = json_decode($request->getContent(), true);
-        $data=$res['data'];
-        $iscreated=false;
-        $agence=$this->agenceRepository->find($data['agence']);
-        if (!is_null($data['id'])){
-            $customer=$this->customerRepository->find($data['id']);
-            $compte=$customer->getCompte();
-        }else{
-            $compte=new User();
+        $data = $res['data'];
+        $iscreated = false;
+        $agence = $this->agenceRepository->find($data['agence']);
+        if (!is_null($data['id'])) {
+            $customer = $this->customerRepository->find($data['id']);
+            $compte = $customer->getCompte();
+        } else {
+            $compte = new User();
             $compte->setEmail($data['email']);
             $compte->setUsername($data['email']);
             $encodedPassword = $this->passwordEncoder->hashPassword($compte, "teraqs12_}//reagart-(365");
             $compte->setRoles(['ROLE_CUSTOMER']);
             $compte->setPassword($encodedPassword);
             $this->doctrine->persist($compte);
-            $customer=new Customer();
+            $customer = new Customer();
             $customer->setCompte($compte);
-            $customer->setDatecreation(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
+            $customer->setDatecreation(new \DateTime('now', new \DateTimeZone('Africa/Douala')));
             $this->doctrine->persist($customer);
-            $iscreated=true;
+            $iscreated = true;
         }
         $customer->setAgence($agence);
         $customer->setCity($data['city']);
@@ -444,10 +457,10 @@ class StaticApiController extends AbstractFOSRestController
         $compte->setName($data['name']);
         $compte->setPhone($data['phone']);
         $this->doctrine->flush();
-        $response=[
-            'status'=>200,
-            'message'=>"Successful request",
-            'customer'=>$customer,
+        $response = [
+            'status' => 200,
+            'message' => "Successful request",
+            'customer' => $customer,
         ];
         $view = $this->view([
             'id' => $customer->getId(),
@@ -470,24 +483,24 @@ class StaticApiController extends AbstractFOSRestController
     public function addCard(Request $request): Response
     {
         $res = json_decode($request->getContent(), true);
-        $data=$res['data'];
-        $customer=$this->customerRepository->find($data['customer']);
-        $card=new Card();
+        $data = $res['data'];
+        $customer = $this->customerRepository->find($data['customer']);
+        $card = new Card();
         $card->setName($data['cardname']);
         $card->setNumerocard($data['cardid']);
         //$card->setAmount($data['amount']);
         $this->doctrine->persist($card);
-        $cardcustomer=new CardCustomer();
+        $cardcustomer = new CardCustomer();
         $cardcustomer->setCustomer($customer);
         $cardcustomer->setCard($card);
         $cardcustomer->setIsActive(false);
-        $cardcustomer->setCreatedAt(new \DateTimeImmutable('now',New \DateTimeZone('Africa/Douala')));
-        $cardcustomer->setPeriodto(new \DateTime('now',New \DateTimeZone('Africa/Douala')));
+        $cardcustomer->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+        $cardcustomer->setPeriodto(new \DateTime('now', new \DateTimeZone('Africa/Douala')));
         $this->doctrine->persist($cardcustomer);
         $this->doctrine->flush();
-        $response=[
-            'status'=>200,
-            'message'=>"Successful request",
+        $response = [
+            'status' => 200,
+            'message' => "Successful request",
         ];
         $view = $this->view($response, Response::HTTP_OK, []);
         return $this->handleView($view);
@@ -501,40 +514,63 @@ class StaticApiController extends AbstractFOSRestController
      */
     public function getStatusBouquetcustomer(Customer $customer)
     {
-        $cards = $this->cardcustomerRepository->findBy(['customer'=>$customer]);
-        $bouquets=$this->bouquetRepository->findAll();
+        $cards = $this->cardcustomerRepository->findBy(['customer' => $customer]);
+        $bouquets = $this->bouquetRepository->findAll();
         $values = [];
-        foreach ($cards as $card){
-            $valbouquet=[];
-            $activation=$this->activationRepository->findByCustomer($card->getCard());
+        foreach ($cards as $card) {
+            $valbouquet = [];
+            $activation = $this->activationRepository->findByCustomer($card->getCard());
 
-            foreach ($bouquets as $bouquet){
-                if (is_null($activation)){
+            foreach ($bouquets as $bouquet) {
+                if (is_null($activation)) {
                     $this->logger->info("B1");
                     $mod = "+0 month";
-                    $bouqs=[];
-                    $status=false;
-                }else{
+                    $bouqs = [];
+                    $status = false;
+                } else {
                     $this->logger->info("B0");
-                    $mod = "+".$activation->getMonthto()." month";
-                    $status=in_array($bouquet->getNumero(),$activation->getBouquets());
+                    $mod = "+" . $activation->getMonthto() . " month";
+                    $status = in_array($bouquet->getNumero(), $activation->getBouquets());
                 }
-                $valbouquet[]=[
+                $valbouquet[] = [
                     'name' => $bouquet->getDescription(),
                     'numero' => $bouquet->getNumero(),
-                    'price' => $status?0:1,
+                    'price' => $status ? 0 : 1,
                     'id' => $bouquet->getId(),
-                    'created' => $status?$activation->getCreatedAt()->format('Y-m-d h:m'):" ",
-                    'expired' => $status?$activation->getCreatedAt()->modify($mod)->format('Y-m-d h:m'):" ",
+                    'created' => $status ? $activation->getCreatedAt()->format('Y-m-d h:m') : " ",
+                    'expired' => $status ? $activation->getCreatedAt()->modify($mod)->format('Y-m-d h:m') : " ",
                     'bouquetid' => $bouquet->getBouquetid(),
                 ];
             }
-            $values[]=[
-              'card'=>$card->getCard()->getNumerocard(),
-              'bouquets'=> $valbouquet
+            $values[] = [
+                'card' => $card->getCard()->getNumerocard(),
+                'bouquets' => $valbouquet
             ];
         }
 
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Rest\Get("/v1/personnels/wallet/{id}", name="api_personnel_wallet")
+     * @param Personnel $personnel
+     * @return Response
+     */
+    public function getWalletPersonnel(Personnel $personnel)
+    {
+        $recharges_ = $this->rechargeRepository->findBy(['personnel' => $personnel]);
+        $recharges = [];
+        foreach ($recharges_ as $recharge) {
+            $recharges[] = [
+                'montant' => $recharge->getAmount(),
+                'created' => $recharge->getCreatedAt()->format("Y-m-d")
+            ];
+        }
+        $values = [
+            "solde" => $personnel->getSolde(),
+            "recharge" => $recharges
+        ];
         $view = $this->view($values, Response::HTTP_OK, []);
         return $this->handleView($view);
     }
