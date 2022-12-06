@@ -59,7 +59,7 @@ class PaymentApiController extends AbstractFOSRestController
     public function __construct(CardRepository $cardRepository,
                                 FlutterwaveService $flutterwaveService,
                                 UserRepository $userRepository, ParameterBagInterface $params,
-                                BouquetRepository $bouquetRepository,PersonnelRepository $personnelRepository,
+                                BouquetRepository $bouquetRepository, PersonnelRepository $personnelRepository,
                                 CardPendingRepository $cardPendingRepository,
                                 LoggerInterface $logger, CardCustomerRepository $cardCustomerRepository, ActivationRepository $activationRepository,
                                 CustomerRepository $customerRepository,
@@ -74,8 +74,8 @@ class PaymentApiController extends AbstractFOSRestController
         $this->cardRepository = $cardRepository;
         $this->cardcustomerRepository = $cardCustomerRepository;
         $this->activationRepository = $activationRepository;
-        $this->cardpendingRepository=$cardPendingRepository;
-        $this->personnelRepository=$personnelRepository;
+        $this->cardpendingRepository = $cardPendingRepository;
+        $this->personnelRepository = $personnelRepository;
         $this->params = $params;
     }
 
@@ -91,12 +91,12 @@ class PaymentApiController extends AbstractFOSRestController
         $reference = $res['item_ref'];
         $this->logger->error($reference);
         $statusbool = $res['status'];
-        $activation=$this->activationRepository->findOneBy(['reference'=>$reference,'status'=>Activation::PENDING]);
-        $cardpending=$this->cardpendingRepository->findOneBy(['activation'=>$activation->getId()]);
+        $activation = $this->activationRepository->findOneBy(['reference' => $reference, 'status' => Activation::PENDING]);
+        $cardpending = $this->cardpendingRepository->findOneBy(['activation' => $activation->getId()]);
         if ($statusbool == "Success") {
-          $activation->setStatus(Activation::SUCCESS);
-          $cardpending->setStatus(CardPending::SUCCESS);
-        }else{
+            $activation->setStatus(Activation::SUCCESS);
+            $cardpending->setStatus(CardPending::SUCCESS);
+        } else {
             $activation->setStatus(Activation::ECHEC);
             $cardpending->setStatus(CardPending::ECHEC);
             $this->doctrine->remove($cardpending);
@@ -114,10 +114,10 @@ class PaymentApiController extends AbstractFOSRestController
     {
         $res = json_decode($request->getContent(), true);
         $data = $res['data'];
-        $produts=$data['bouquets'];
-        $amount=$data['amount'];
-        $month=$data['month'];
-        $personnel=$this->personnelRepository->find($data['agent']);
+        $produts = $data['bouquets'];
+        $amount = $data['amount'];
+        $month = $data['month'];
+        $personnel = $this->personnelRepository->find($data['agent']);
         $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $reference = "";
         $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
@@ -148,25 +148,26 @@ class PaymentApiController extends AbstractFOSRestController
         $client = new ClientPaymoo();
         $response = $client->postfinal("payment_url", $data);
         if ($response['response'] == "success") {
-            $this->createActivate($cardcustomer, $reference, $amount,$produts,$month,$personnel,Activation::PENDING);
+            $this->createActivate($cardcustomer, $reference, $amount, $produts, $month, $personnel, Activation::PENDING);
             $url = $response["payment_url"];
             $this->logger->info($url);
             $link_array = explode('/', $url);
             $response = [
-                'url'=>$url,
-                'code'=>200
+                'url' => $url,
+                'code' => 200
             ];
             $view = $this->view($response, Response::HTTP_OK, []);
             return $this->handleView($view);
-        }else{
+        } else {
             $response = [
-                'url'=>"",
-                'code'=>500
+                'url' => "",
+                'code' => 500
             ];
             $view = $this->view($response, Response::HTTP_OK, []);
             return $this->handleView($view);
         }
     }
+
     /**
      * @Rest\Post("/v1/activations/cash", name="api_activations_cash_get_ajax")
      * @param Request $request
@@ -182,69 +183,36 @@ class PaymentApiController extends AbstractFOSRestController
         $this->logger->error("M0");
         $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $this->logger->error("M1");
-        $personnel=$this->personnelRepository->find($data['agent']);
+        $personnel = $this->personnelRepository->find($data['agent']);
         $this->logger->error("M2");
         $reference = "";
         $allowed_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
         for ($i = 1; $i <= 12; ++$i) {
             $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
         }
-        if ($personnel->getSolde()>=$amount){
-            $this->createActivateCash($cardcustomer, $reference, $amount,$produts,$month,$personnel,Activation::SUCCESS);
-           $personnel->setSolde($personnel->getSolde()-$amount);
-           $this->doctrine->flush();
+        if ($personnel->getSolde() >= $amount) {
+            $this->createActivateCash($cardcustomer, $reference, $amount, $produts, $month, $personnel, Activation::SUCCESS);
+            $personnel->setSolde($personnel->getSolde() - $amount);
+            $this->doctrine->flush();
             $response = [
-                'url'=>"",
-                'message'=>'Successful',
-                'code'=>200
+                'url' => "",
+                'message' => 'Successful',
+                'code' => 200
             ];
             $view = $this->view($response, Response::HTTP_OK, []);
-        }else{
-         $this->logger->error("M4");
+        } else {
+            $this->logger->error("M4");
             $response = [
-                'url'=>"",
-                'message'=>'Solde insuficant',
-                'code'=>500
+                'url' => "",
+                'message' => 'Solde insuficant',
+                'code' => 500
             ];
             $view = $this->view($response, 404, []);
         }
         return $this->handleView($view);
     }
-    function createActivate(CardCustomer $card, $reference, $amount,$produts,$month,$personnel,$status)
-    {
-        $actiavtion = new Activation();
-        $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
-        $actiavtion->setCard($card->getCard());
-        $actiavtion->setAmount($amount);
-       // $month = intdiv($amount, $card->getCard()->getAmount());
-        //$month = 1;
-        $actiavtion->setMonthto($month);
-        $actiavtion->setReference($reference);
-        $actiavtion->setStatus($status);
-        $actiavtion->setBouquets($produts);
-        $actiavtion->setCreatedBy($personnel);
-        $this->doctrine->persist($actiavtion);
-        for ($i=0;$i<sizeof($produts);$i++){
-            $cardpending = new CardPending();
-            $cardpending->setCardid($card->getCard()->getNumerocard());
-            $cardpending->setIsdelete(true);
-            $cardpending->setSendornot(1);
-            $cardpending->setCardstatus(1);
-            $cardpending->setStatus(CardPending::PENDING);
-            $cardpending->setActivation($actiavtion->getId());
-            $cardpending->setBouquet($produts[$i]);
-            $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
-                new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
-            $mod = "+".$month." month";
-            $date_line->modify($mod);
-            $cardpending->setExpiredtime($date_line);
-            $this->logger->info($date_line->format("Y-m-d"));
-            $this->doctrine->persist($cardpending);
-        }
 
-        $this->doctrine->flush();
-    }
-    function createActivateCash(CardCustomer $card, $reference, $amount,$produts,$month,$personnel,$status)
+    function createActivate(CardCustomer $card, $reference, $amount, $produts, $month, $personnel, $status)
     {
         $actiavtion = new Activation();
         $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
@@ -258,7 +226,42 @@ class PaymentApiController extends AbstractFOSRestController
         $actiavtion->setBouquets($produts);
         $actiavtion->setCreatedBy($personnel);
         $this->doctrine->persist($actiavtion);
-        for ($i=0;$i<sizeof($produts);$i++){
+        for ($i = 0; $i < sizeof($produts); $i++) {
+            $cardpending = new CardPending();
+            $cardpending->setCardid($card->getCard()->getNumerocard());
+            $cardpending->setIsdelete(true);
+            $cardpending->setSendornot(1);
+            $cardpending->setCardstatus(1);
+            $cardpending->setStatus(CardPending::PENDING);
+            $cardpending->setActivation($actiavtion->getId());
+            $cardpending->setBouquet($produts[$i]);
+            $date_line = is_null($card->getPeriodto()) ? new \DateTime('now', new \DateTimeZone('Africa/Douala')) :
+                new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
+            $mod = "+" . $month . " month";
+            $date_line->modify($mod);
+            $cardpending->setExpiredtime($date_line);
+            $this->logger->info($date_line->format("Y-m-d"));
+            $this->doctrine->persist($cardpending);
+        }
+
+        $this->doctrine->flush();
+    }
+
+    function createActivateCash(CardCustomer $card, $reference, $amount, $produts, $month, $personnel, $status)
+    {
+        $actiavtion = new Activation();
+        $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+        $actiavtion->setCard($card->getCard());
+        $actiavtion->setAmount($amount);
+        // $month = intdiv($amount, $card->getCard()->getAmount());
+        //$month = 1;
+        $actiavtion->setMonthto($month);
+        $actiavtion->setReference($reference);
+        $actiavtion->setStatus($status);
+        $actiavtion->setBouquets($produts);
+        $actiavtion->setCreatedBy($personnel);
+        $this->doctrine->persist($actiavtion);
+        for ($i = 0; $i < sizeof($produts); $i++) {
             $cardpending = new CardPending();
             $cardpending->setCardid($card->getCard()->getNumerocard());
             $cardpending->setIsdelete(true);
@@ -267,9 +270,9 @@ class PaymentApiController extends AbstractFOSRestController
             $cardpending->setStatus(CardPending::SUCCESS);
             $cardpending->setActivation($actiavtion->getId());
             $cardpending->setBouquet($produts[$i]);
-            $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
+            $date_line = is_null($card->getPeriodto()) ? new \DateTime('now', new \DateTimeZone('Africa/Douala')) :
                 new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
-            $mod = "+".$month." month";
+            $mod = "+" . $month . " month";
             $date_line->modify($mod);
             $cardpending->setExpiredtime($date_line);
             $this->logger->info($date_line->format("Y-m-d"));
