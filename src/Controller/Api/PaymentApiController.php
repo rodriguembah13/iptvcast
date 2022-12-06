@@ -190,7 +190,7 @@ class PaymentApiController extends AbstractFOSRestController
             $reference .= $allowed_characters[rand(0, count($allowed_characters) - 1)];
         }
         if ($personnel->getSolde()>=$amount){
-            $this->createActivate($cardcustomer, $reference, $amount,$produts,$month,$personnel,Activation::SUCCESS);
+            $this->createActivateCash($cardcustomer, $reference, $amount,$produts,$month,$personnel,Activation::SUCCESS);
            $personnel->setSolde($personnel->getSolde()-$amount);
            $this->doctrine->flush();
             $response = [
@@ -231,6 +231,40 @@ class PaymentApiController extends AbstractFOSRestController
             $cardpending->setSendornot(1);
             $cardpending->setCardstatus(1);
             $cardpending->setStatus(CardPending::PENDING);
+            $cardpending->setActivation($actiavtion->getId());
+            $cardpending->setBouquet($produts[$i]);
+            $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
+                new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
+            $mod = "+".$month." month";
+            $date_line->modify($mod);
+            $cardpending->setExpiredtime($date_line);
+            $this->logger->info($date_line->format("Y-m-d"));
+            $this->doctrine->persist($cardpending);
+        }
+
+        $this->doctrine->flush();
+    }
+    function createActivateCash(CardCustomer $card, $reference, $amount,$produts,$month,$personnel,$status)
+    {
+        $actiavtion = new Activation();
+        $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+        $actiavtion->setCard($card->getCard());
+        $actiavtion->setAmount($amount);
+        // $month = intdiv($amount, $card->getCard()->getAmount());
+        //$month = 1;
+        $actiavtion->setMonthto($month);
+        $actiavtion->setReference($reference);
+        $actiavtion->setStatus($status);
+        $actiavtion->setBouquets($produts);
+        $actiavtion->setCreatedBy($personnel);
+        $this->doctrine->persist($actiavtion);
+        for ($i=0;$i<sizeof($produts);$i++){
+            $cardpending = new CardPending();
+            $cardpending->setCardid($card->getCard()->getNumerocard());
+            $cardpending->setIsdelete(true);
+            $cardpending->setSendornot(1);
+            $cardpending->setCardstatus(1);
+            $cardpending->setStatus(CardPending::SUCCESS);
             $cardpending->setActivation($actiavtion->getId());
             $cardpending->setBouquet($produts[$i]);
             $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
