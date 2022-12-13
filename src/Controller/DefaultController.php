@@ -616,6 +616,7 @@ class DefaultController extends AbstractController
             $compte->setPassword($encodedPassword);
             $entityManager->persist($compte);
             $personnel->setCompte($compte);
+            $personnel->setSolde(0.0);
             $personnel->setAgence($agence);
             $personnel->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
             $entityManager->persist($personnel);
