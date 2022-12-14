@@ -742,7 +742,11 @@ class DefaultController extends AbstractController
                     $this->addFlash("error","Vous avez pas suffissament des droits pour effectuer ce paiement");
                 }else{
                     $entityManager = $this->getDoctrine()->getManager();
-                    $personnel->setSolde($personnel->getSolde()+$request->get('amount'));
+                    if($personnel->getSolde()<$request->get('amount')){
+                        $this->addFlash("error","Votre compte ne peut pas effectuer cette transaction: montant insuffissant");
+                        return $this->redirectToRoute('erropage');
+                    }
+                    $personnel->setSolde($personnel->getSolde()-$request->get('amount'));
                     $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
@@ -813,7 +817,11 @@ class DefaultController extends AbstractController
                     $this->addFlash("error","Vous avez pas suffissament des droits pour effectuer ce paiement");
                 }else{
                     $entityManager = $this->getDoctrine()->getManager();
-                    $personnel->setSolde($personnel->getSolde()+$request->get('amount'));
+                    if($personnel->getSolde()<$request->get('amount')){
+                        $this->addFlash("error","Votre compte ne peut pas effectuer cette transaction: montant insuffissant");
+                        return $this->redirectToRoute('erropage');
+                    }
+                    $personnel->setSolde($personnel->getSolde()-$request->get('amount'));
                     $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
@@ -891,7 +899,11 @@ class DefaultController extends AbstractController
                     $this->addFlash("error","Vous avez pas suffissament des droits pour effectuer ce paiement");
                 }else{
                     $entityManager = $this->getDoctrine()->getManager();
-                    $personnel->setSolde($personnel->getSolde()+$request->get('amount'));
+                    if($personnel->getSolde()<$request->get('amount')){
+                        $this->addFlash("error","Votre compte ne peut pas effectuer cette transaction: montant insuffissant");
+                        return $this->redirectToRoute('erropage');
+                    }
+                    $personnel->setSolde($personnel->getSolde()-$request->get('amount'));
                     $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
