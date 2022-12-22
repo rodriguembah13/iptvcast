@@ -112,9 +112,34 @@
                         <span> Bouquets </span>
                     </a>
                 </li>
-                {% if is_granted('ROLE_ADMIN') %}
-                <li class="menu-title mt-2">Activations</li>
+                <li class="menu-title mt-2">Etats & Finances</li>
+                {% if is_granted('ROLE_AGENT') %}
+                <li>
 
+                    <a href="{{ path('etatsouscriptionagent') }}">
+                        <i class="mdi mdi-chart-bar"></i>
+                        <span>Etats</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if is_granted('ROLE_ADMIN') %}
+                <li>
+                    <a href="{{ path('etatsouscription') }}">
+                        <i class="mdi mdi-chart-bar"></i>
+                        <span>Etats</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li class="menu-title mt-2">Activations</li>
+                {% if is_granted('ROLE_AGENT') %}
+                <li>
+                    <a href="{{ path('souscriptionsagent') }}">
+                        <i class="mdi mdi-subway"></i>
+                        <span>Lists</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if is_granted('ROLE_ADMIN') %}
                 <li>
                     <a href="#sidebarBaseui" data-bs-toggle="collapse">
                         <i class="mdi mdi-briefcase"></i>
@@ -149,6 +174,7 @@
                         </a>
                     </li>
                 {% endif %}
+
 
 
             </ul>

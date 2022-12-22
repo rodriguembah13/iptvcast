@@ -50,7 +50,7 @@
                     <tr>
                         <td>{{ card.card.name }}</td>
                         <td>{{ card.card.numerocard }}</td>
-                        <td> <a class="btn btn-danger"><i class="me-2 icon-md fa fa-trash"></i></a></td>
+                        <td> <a class="btn btn-danger" onclick="deleteItem({{ card.id }})"><i class="me-2 icon-md fa fa-trash"></i></a></td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -62,6 +62,49 @@
 
 {% block javascripts %}
     {{ parent() }}
+    <script>
+        $(function () {
+            $('#deletecard').click(function () {
+                $.ajax({
+                    url: "{{ path('removecard_ajax') }}",
+                    type: "GET",
+                    dataType: "JSON",
+                    data: {
+                        id:id,
+                        card:card
+                    },
+                    success: function (data) {
+                        window.location.reload();
+                    },
+                    error: function (err) {
+                        alert("An error ocurred while loading data ...");
+                        setTimeout(function () {
+                            $("#overlay").fadeOut(300);
+                        }, 500);
+                    }
+                });
+            })
+        })
+        function deleteItem(id) {
+            $.ajax({
+                url: "{{ path('removecard_ajax') }}",
+                type: "GET",
+                dataType: "JSON",
+                data: {
+                    id:id,
+                },
+                success: function (data) {
+                    window.location.reload();
+                },
+                error: function (err) {
+                    alert("An error ocurred while loading data ...");
+                    setTimeout(function () {
+                        $("#overlay").fadeOut(300);
+                    }, 500);
+                }
+            });
+        }
+    </script>
 {% endblock %}
 
 

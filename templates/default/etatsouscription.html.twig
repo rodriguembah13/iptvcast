@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Etats souscription
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h4>Soucriptions par periode</h4>
+                <div class="row">
+                    <div class="mb-3 col-md-3">
+                        <label for="name" class="form-label">De</label>
+                        <input type="date" name="name" class="form-control" id="name" placeholder="Enter name">
+                    </div>
+                    <div class="mb-3 col-md-3">
+                        <label for="name" class="form-label">A</label>
+                        <input type="date" name="name" class="form-control" id="name" placeholder="Enter name">
+                    </div>
+                    <div class=" col-md-3 mt-3">
+                        <a href="{{ path('etatsouscriptionagent') }}" class="btn btn-secondary"><i class="mdi mdi-search-web"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="souscriptions">{{ 'loading'|trans({}, 'messages') }}</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#souscriptions').initDataTables({{ datatable_settings(datatable) }});
+        });
+
+    </script>
+{% endblock %}
+
+

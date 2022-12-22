@@ -327,7 +327,69 @@ class DefaultController extends AbstractController
             'title' => "Activations"
         ]);
     }
-
+    /**
+     * @Route("/souscriptionsagent", name="souscriptionsagent")
+     */
+    public function souscriptionsagent(Request $request): Response
+    {
+        $user=$this->getUser();
+        $personnel=$this->personnelRepository->findOneBy(['compte'=>$user]);
+        $table = $this->dataTableFactory->create()
+            ->add('createdAt', DateTimeColumn::class, [
+                'label' => 'Date ',
+                'format' => "Y-m-d h:m"
+            ])
+            ->add('card', TextColumn::class, [
+                'label' => 'N° card',
+                'field' => 'card.numerocard'
+            ])
+            ->add('amount', TextColumn::class, [
+                'label' => 'Montant',
+                'render' => function ($value, $context) {
+                    return '<span>' . $value . '</span>';
+                }
+            ])
+            ->add('bouquets', TwigColumn::class, [
+                'label' => 'Bouquets',
+                'template' => 'default/buttons/activation.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+            ->add('status', TextColumn::class, [
+                'className' => 'buttons',
+                'label' => 'status',
+                // 'template' => 'user/status.html.twig',
+                'render' => function ($value, $context) {
+                    if ($value == Activation::SUCCESS) {
+                        return '<a class="btn btn-sm btn-success">' . $value . '</a>';
+                    } elseif ($value == Souscription::PENDING) {
+                        return '<a class="btn btn-sm btn-warning">' . $value . '</a>';
+                    } else {
+                        return '<a class="btn btn-sm btn-danger">' . $value . '</a>';
+                    }
+                }])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Activation::class,
+                'query' => function (QueryBuilder $builder) use($personnel) {
+                    $builder
+                        ->select('souscription', 'card')
+                        ->from(Activation::class, 'souscription')
+                        ->andWhere('souscription.createdBy = :personnel')
+                        ->setParameter('personnel', $personnel)
+                        ->andWhere('souscription.status = :satus')
+                        ->setParameter('satus', Activation::SUCCESS)
+                        ->join('souscription.card', 'card')
+                        ->orderBy('souscription.id', 'DESC');
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
+        }
+        return $this->render('default/souscriptions.html.twig', [
+            'datatable' => $table,
+            'title' => "Activations"
+        ]);
+    }
     /**
      * @Route("/souscriptionspending", name="souscriptionspending")
      */
@@ -387,7 +449,152 @@ class DefaultController extends AbstractController
             'title' => "Activations"
         ]);
     }
+    /**
+     * @Route("/etatsouscriptionagent", name="etatsouscriptionagent")
+     */
+    public function etatsouscripagent(Request $request): Response
+    {
+        $user=$this->getUser();
+        if (is_null($request->get('at'))){
+            $at=date("Y-m-d");
+            $to=date("Y-m-d");
+        }else{
+            $at=$request->get('at');
+            $to=$request->get('to');
+        }
 
+        $personnel=$this->personnelRepository->findOneBy(['compte'=>$user]);
+        $table = $this->dataTableFactory->create()
+            ->add('createdAt', DateTimeColumn::class, [
+                'label' => 'Date ',
+                'format' => "Y-m-d h:m"
+            ])
+            ->add('card', TextColumn::class, [
+                'label' => 'N° card',
+                'field' => 'card.numerocard'
+            ])
+            ->add('amount', TextColumn::class, [
+                'label' => 'Montant',
+                'render' => function ($value, $context) {
+                    return '<span>' . $value . '</span>';
+                }
+            ])
+            ->add('bouquets', TwigColumn::class, [
+                'label' => 'Bouquets',
+                'template' => 'default/buttons/activation.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+            ->add('status', TextColumn::class, [
+                'className' => 'buttons',
+                'label' => 'status',
+                // 'template' => 'user/status.html.twig',
+                'render' => function ($value, $context) {
+                    if ($value == Activation::SUCCESS) {
+                        return '<a class="btn btn-sm btn-success">' . $value . '</a>';
+                    } elseif ($value == Souscription::PENDING) {
+                        return '<a class="btn btn-sm btn-warning">' . $value . '</a>';
+                    } else {
+                        return '<a class="btn btn-sm btn-danger">' . $value . '</a>';
+                    }
+                }])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Activation::class,
+                'query' => function (QueryBuilder $builder) use($personnel,$at,$to) {
+                    $builder
+                        ->select('souscription', 'card')
+                        ->from(Activation::class, 'souscription')
+                        ->andWhere('souscription.createdBy = :personnel')
+                        ->setParameter('personnel', $personnel)
+                        ->andWhere('souscription.status = :satus')
+                        ->setParameter('satus', Activation::SUCCESS)
+                        ->andWhere('souscription.createdAt >= :begin')
+                        ->andWhere('souscription.createdAt < :end')
+                        ->setParameter('begin',$at )
+                        ->setParameter('end', $to)
+                        ->join('souscription.card', 'card')
+                        ->orderBy('souscription.id', 'DESC');
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
+        }
+        return $this->render('default/etatsouscriptionagent.html.twig', [
+            'datatable' => $table,
+            'title' => "Etats souscriptions"
+        ]);
+    }
+    /**
+     * @Route("/etatsouscription", name="etatsouscription")
+     */
+    public function etatsouscripall(Request $request): Response
+    {
+        $user=$this->getUser();
+        if (is_null($request->get('at'))){
+            $at=date("Y-m-d");
+            $to=date("Y-m-d");
+        }else{
+            $at=$request->get('at');
+            $to=$request->get('to');
+        }
+        $table = $this->dataTableFactory->create()
+            ->add('createdAt', DateTimeColumn::class, [
+                'label' => 'Date ',
+                'format' => "Y-m-d h:m"
+            ])
+            ->add('card', TextColumn::class, [
+                'label' => 'N° card',
+                'field' => 'card.numerocard'
+            ])
+            ->add('amount', TextColumn::class, [
+                'label' => 'Montant',
+                'render' => function ($value, $context) {
+                    return '<span>' . $value . '</span>';
+                }
+            ])
+            ->add('bouquets', TwigColumn::class, [
+                'label' => 'Bouquets',
+                'template' => 'default/buttons/activation.html.twig',
+                'render' => function ($value, $context) {
+                    return $value;
+                }])
+            ->add('status', TextColumn::class, [
+                'className' => 'buttons',
+                'label' => 'status',
+                // 'template' => 'user/status.html.twig',
+                'render' => function ($value, $context) {
+                    if ($value == Activation::SUCCESS) {
+                        return '<a class="btn btn-sm btn-success">' . $value . '</a>';
+                    } elseif ($value == Souscription::PENDING) {
+                        return '<a class="btn btn-sm btn-warning">' . $value . '</a>';
+                    } else {
+                        return '<a class="btn btn-sm btn-danger">' . $value . '</a>';
+                    }
+                }])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Activation::class,
+                'query' => function (QueryBuilder $builder) use($at,$to) {
+                    $builder
+                        ->select('souscription', 'card')
+                        ->from(Activation::class, 'souscription')
+                        ->andWhere('souscription.status = :satus')
+                        ->setParameter('satus', Activation::SUCCESS)
+                        ->andWhere('souscription.createdAt >= :begin')
+                        ->andWhere('souscription.createdAt < :end')
+                        ->setParameter('begin',$at )
+                        ->setParameter('end', $to)
+                        ->join('souscription.card', 'card')
+                        ->orderBy('souscription.id', 'DESC');
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
+        }
+        return $this->render('default/etatsouscription.html.twig', [
+            'datatable' => $table,
+            'title' => "Etats souscriptions"
+        ]);
+    }
     /**
      * @Route("/customers", name="customers")
      */
@@ -555,8 +762,7 @@ class DefaultController extends AbstractController
         if ($request->getMethod() == "POST") {
             $entityManager = $this->getDoctrine()->getManager();
             $agence->setCity($request->get('city'));
-            $agence->setAddress($request->get('city'));
-            $agence->setCity($request->get('city'));
+            $agence->setAddress($request->get('address'));
             $agence->setCity($request->get('city'));
             $entityManager->flush();
             return $this->redirectToRoute('agences');
@@ -582,6 +788,7 @@ class DefaultController extends AbstractController
             $compte = $personnel->getCompte();
             $compte->setName($request->get('name'));
             $compte->setPhone($request->get('phone'));
+
             $compte->setEmail($request->get('email'));
             $entityManager->flush();
             return $this->redirectToRoute('agents');
@@ -747,7 +954,8 @@ class DefaultController extends AbstractController
                         return $this->redirectToRoute('erropage');
                     }
                     $personnel->setSolde($personnel->getSolde()-$request->get('amount'));
-                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $month=$request->get('periode');
+                    $this->createActivateRecharge($cardcustomer, $reference, $request->get('amount'), $produts,$month);
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
                 }
@@ -778,7 +986,8 @@ class DefaultController extends AbstractController
                 $this->logger->info($response['response']);
                 $this->logger->info($request->get('amount'));
                 if ($response['response'] == "success") {
-                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $month=$request->get('periode');
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts,$month);
                     $url = $response["payment_url"];
                     $this->logger->info($url);
                     $link_array = explode('/', $url);
@@ -822,7 +1031,8 @@ class DefaultController extends AbstractController
                         return $this->redirectToRoute('erropage');
                     }
                     $personnel->setSolde($personnel->getSolde()-$request->get('amount'));
-                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $month=$request->get('periode');
+                    $this->createActivateRecharge($cardcustomer, $reference, $request->get('amount'), $produts,$month);
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
                 }
@@ -853,7 +1063,8 @@ class DefaultController extends AbstractController
                 $response = $client->postfinal("payment_url", $data);
                 $this->logger->info(json_encode($response));
                 if ($response['response'] == "success") {
-                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $month=$request->get('periode');
+                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts,$month);
                     $url = $response["payment_url"];
                     $this->logger->info($url);
                     $link_array = explode('/', $url);
@@ -883,9 +1094,9 @@ class DefaultController extends AbstractController
     public function customer_activate_card(Customer $customer, Request $request): Response
     {
         $data = [];
-
         if ($request->getMethod() == "POST") {
             $produts = $request->get('bouquets');
+
             $this->logger->info(json_encode($produts));
             $cardcustomer = $this->cardcustomerRepository->find($request->get('cardcustomer'));
             $reference = "";
@@ -904,7 +1115,8 @@ class DefaultController extends AbstractController
                         return $this->redirectToRoute('erropage');
                     }
                     $personnel->setSolde($personnel->getSolde()-$request->get('amount'));
-                    $this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts);
+                    $month=$request->get('periode');
+                    $this->createActivateRecharge($cardcustomer, $reference, $request->get('amount'), $produts,$month);
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
                 }
@@ -956,37 +1168,78 @@ class DefaultController extends AbstractController
         ]);
     }
 
-    function createActivate(CardCustomer $card, $reference, $amount, $produts)
+    function createActivate(CardCustomer $card, $reference, $amount, $produts,$month)
     {
         $entityManager = $this->getDoctrine()->getManager();
-        $actiavtion = new Activation();
-        $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
-        $actiavtion->setCard($card->getCard());
-        $actiavtion->setAmount($amount);
-        $month = 1;
-        $actiavtion->setMonthto($month);
-        $actiavtion->setReference($reference);
-        $actiavtion->setStatus(Activation::PENDING);
-        $actiavtion->setBouquets($produts);
-        $entityManager->persist($actiavtion);
-        for ($i = 0; $i < sizeof($produts); $i++) {
-            $cardpending = new CardPending();
-            $cardpending->setCardid($card->getCard()->getNumerocard());
-            $cardpending->setIsdelete(true);
-            $cardpending->setSendornot(1);
-            $cardpending->setCardstatus(1);
-            $cardpending->setBouquet($produts[$i]);
-            $cardpending->setStatus(CardPending::PENDING);
-            $cardpending->setActivation($actiavtion->getId());
-            $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
-                new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
-            $mod = "+1 month";
-            $date_line->modify($mod);
-            $cardpending->setExpiredtime($date_line);
-            $entityManager->persist($cardpending);
+        $personnel=$this->personnelRepository->findOneBy(['compte'=>$this->getUser()]);
+        if ($amount>0 && $month>0){
+            $actiavtion = new Activation();
+            $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+            $actiavtion->setCard($card->getCard());
+            $actiavtion->setAmount($amount);
+            $actiavtion->setMonthto($month);
+            $actiavtion->setReference($reference);
+            $actiavtion->setStatus(Activation::PENDING);
+            $actiavtion->setCreatedBy($personnel);
+
+            $actiavtion->setBouquets($produts);
+            $entityManager->persist($actiavtion);
+            for ($i = 0; $i < sizeof($produts); $i++) {
+                $cardpending = new CardPending();
+                $cardpending->setCardid($card->getCard()->getNumerocard());
+                $cardpending->setIsdelete(true);
+                $cardpending->setSendornot(1);
+                $cardpending->setCardstatus(1);
+                $cardpending->setBouquet($produts[$i]);
+                $cardpending->setStatus(CardPending::PENDING);
+                $cardpending->setActivation($actiavtion->getId());
+                $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
+                    new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
+                $mod = "+".intval($month)." month";
+                $date_line->modify($mod);
+                $cardpending->setExpiredtime($date_line);
+                $entityManager->persist($cardpending);
+            }
+
+            $entityManager->flush();
         }
 
-        $entityManager->flush();
+    }
+    function createActivateRecharge(CardCustomer $card, $reference, $amount, $produts,$month)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $personnel=$this->personnelRepository->findOneBy(['compte'=>$this->getUser()]);
+        if ($amount>0 && $month>0){
+            $actiavtion = new Activation();
+            $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
+            $actiavtion->setCard($card->getCard());
+            $actiavtion->setAmount($amount);
+            $actiavtion->setMonthto($month);
+            $actiavtion->setReference($reference);
+            $actiavtion->setStatus(Activation::SUCCESS);
+            $actiavtion->setBouquets($produts);
+            $actiavtion->setCreatedBy($personnel);
+            $entityManager->persist($actiavtion);
+            for ($i = 0; $i < sizeof($produts); $i++) {
+                $cardpending = new CardPending();
+                $cardpending->setCardid($card->getCard()->getNumerocard());
+                $cardpending->setIsdelete(true);
+                $cardpending->setSendornot(1);
+                $cardpending->setCardstatus(1);
+                $cardpending->setBouquet($produts[$i]);
+                $cardpending->setStatus(CardPending::SUCCESS);
+                $cardpending->setActivation($actiavtion->getId());
+                $date_line = is_null($card->getPeriodto())? new \DateTime('now', new \DateTimeZone('Africa/Douala')):
+                    new \DateTime($card->getPeriodto()->format('Y-m-d h:m'), new \DateTimeZone('Africa/Douala'));
+                $mod = "+".intval($month)." month";
+                $date_line->modify($mod);
+                $cardpending->setExpiredtime($date_line);
+                $entityManager->persist($cardpending);
+            }
+
+            $entityManager->flush();
+        }
+
     }
 
     /**
@@ -1006,7 +1259,24 @@ class DefaultController extends AbstractController
 
         return new JsonResponse($data, 200);
     }
+    /**
+     * @Route("/getpricebouquetqte/ajax", name="getpricebouquetqte_ajax", methods={"GET"})
+     */
+    public function getpricebouquetByQteAjax(Request $request): JsonResponse
+    {
+        $bqts = $request->get('bouquets');
+        $qte=$request->get('periode');
+        $amount = 0.0;
+        for ($i = 0; $i < count($bqts); $i++) {
+            $bq = $this->bouquetRepository->findOneBy(['numero' => $bqts[$i]]);
+            $amount += $bq->getPrice();
+        }
+        $data = [
+            'amount' => $amount*$qte,
+        ];
 
+        return new JsonResponse($data, 200);
+    }
     /**
      * @Route("/getcardcustomer/ajax", name="getcardcustomer_ajax", methods={"GET"})
      */
@@ -1056,7 +1326,21 @@ class DefaultController extends AbstractController
 
         return new JsonResponse([], 200);
     }
+    /**
+     * @Route("/removecard/ajax", name="removecard_ajax", methods={"GET"})
+     */
+    public function removecardAjax(Request $request): JsonResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $carcustomer=$this->cardcustomerRepository->find($request->get('id'));
+        if (!is_null($carcustomer)){
+            $entityManager->remove($carcustomer->getCard());
+            $entityManager->remove($carcustomer);
+        }
+        $entityManager->flush();
 
+        return new JsonResponse([], 200);
+    }
     /**
      * @Route("/import/customer", name="customer_import_xls", methods={"GET","POST"})
      *

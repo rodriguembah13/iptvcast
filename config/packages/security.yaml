@@ -38,10 +38,10 @@ security:
   access_control:
     - { path: ^/auth/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
     - { path: ^/statistique, roles: ROLE_ADMIN }
-    - { path: ^/, roles: ROLE_AGENT }
+    - { path: ^/, roles: ROLE_USER }
     - { path: ^/v1/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
   role_hierarchy:
-    ROLE_ADMIN: ROLE_AGENT
+    ROLE_ADMIN: ROLE_USER
     ROLE_AGENT: ROLE_USER
 when@test:
   security:
