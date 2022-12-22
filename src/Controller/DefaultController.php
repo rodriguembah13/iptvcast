@@ -1161,7 +1161,7 @@ class DefaultController extends AbstractController
 
         return $this->render('default/edit/activatecardcustomer.html.twig', [
             'customer' => $customer,
-            'cards' => $this->cardcustomerRepository->findAll(),
+            'cards' => $this->cardcustomerRepository->findBy(['customer'=>$customer]),
             'bouquets' => $this->bouquetRepository->findAll(),
             'title' => "Activate card",
 
