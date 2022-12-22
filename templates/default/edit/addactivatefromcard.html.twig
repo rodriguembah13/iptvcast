@@ -26,6 +26,21 @@
                         </div>
                     </div>
                     <div class="row mb-3">
+                        <label for="example-select" class="col-sm-3 form-label">Periode</label>
+                        <div class="col-sm-9">
+                            <select name="periode" class="form-select" id="periodeactivate">
+                                <option>Choose periode</option>
+                                <option value="1">1 Mois</option>
+                                <option value="2">2 Mois</option>
+                                <option value="3">3 Mois</option>
+                                <option value="4">4 Mois</option>
+                                <option value="5">5 Mois</option>
+                                <option value="6">6 Mois</option>
+                                <option value="7">7 Mois</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
                         <label for="exampleInputUsername2" class="col-sm-3 col-form-label">Total</label>
                         <div class="col-sm-9">
                             <input readonly type="text" name="amount"  class="form-control" id="amount_card" placeholder="0.0">
@@ -89,6 +104,24 @@
                     }
                 });
 
+            })
+            $('#periodeactivate').change(function () {
+                var qte=$(this).val();
+                $.ajax({
+                    url: "{{ path('getpricebouquetqte_ajax') }}",
+                    type: "GET",
+                    dataType: "JSON",
+                    data: {
+                        bouquets: $('#bouquet_select').val(),
+                        periode: qte,
+                    },
+                    success: function (data) {
+                        $('#amount_card').val(data.amount)
+                    },
+                    error: function (err) {
+
+                    }
+                });
             })
             $('#makeprice').click(function () {
                 $.ajax({
