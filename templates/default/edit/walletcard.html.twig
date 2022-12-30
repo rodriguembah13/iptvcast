@@ -6,7 +6,8 @@
 {% block body %}
     <div class="card">
         <div class="card-header">
-           <h2>Agent: {{ personnel.compte.name }}</h2>  <h4>Solde:{{ personnel.solde }}</h4>
+           <h2>Agent: {{ personnel.compte.name }}</h2>  <h4>Solde (FCFA) :{{ personnel.solde }}</h4>
+            <h4>Total recharge (FCFA) :{{ total }}</h4>
         </div>
         <form method="post">
             <div class="card-body">
@@ -30,7 +31,6 @@
                 <tr>
                     <th>Date transaction</th>
                     <th>Montant</th>
-                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
@@ -39,7 +39,7 @@
                     <tr>
                         <td>{{ item.createdAt | date('Y-m-d h:m') }}</td>
                         <td>{{ item.amount }}</td>
-                        <td>{{ item.personnel.solde }}</td>
+                        <td></td>
                     </tr>
                 {% endfor %}
                 </tbody>

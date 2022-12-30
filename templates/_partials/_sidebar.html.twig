@@ -129,6 +129,18 @@
                         <span>Etats</span>
                     </a>
                 </li>
+                    <li>
+                        <a href="{{ path('etatsouscriptionbyagent') }}">
+                            <i class="mdi mdi-chart-arc"></i>
+                            <span>Etats par agent</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ path('recapsoucripteur') }}">
+                            <i class="mdi mdi-chart-bubble"></i>
+                            <span>Recapitulatif</span>
+                        </a>
+                    </li>
                 {% endif %}
                 <li class="menu-title mt-2">Activations</li>
                 {% if is_granted('ROLE_AGENT') %}

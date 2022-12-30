@@ -1,58 +1,48 @@
 {% extends 'base.html.twig' %}
 {% block title %}
-    Etats souscription
+    Recapitulatif des activations
 {% endblock %}
 
 {% block body %}
     <div class="container-fluid">
         <div class="card">
             <div class="card-header">
-                <h4>Soucriptions par periode</h4>
+                <h4>Recapitulatif des activations</h4>
                 <div class="row">
-                    <div class="mb-3 col-md-3">
+                    <div class="mb-3 col-md-2">
                         <label for="name" class="form-label">De</label>
                         <input type="date" name="name" class="form-control" id="at">
                     </div>
-                    <div class="mb-3 col-md-3">
+                    <div class="mb-3 col-md-2">
                         <label for="name" class="form-label">A</label>
                         <input type="date" name="name" class="form-control" id="to">
                     </div>
-                    <div class=" col-md-3 mt-3">
+                    <div class=" col-md-2 mt-3">
                         <button class="btn btn-secondary" id="souscription_btn"><i class="mdi mdi-search-web"></i></button>
                         <button class="btn btn-success" id="print_souscription"><i class="mdi mdi-file-excel"></i></button>
-                    </div>
-                    <div class=" col-md-3">
-                        <h4>Total (FCFA): {{ sum }}</h4>
                     </div>
                 </div>
 
             </div>
             <div class="card-body">
-                {#<div id="souscriptions" class="table-responsive">{{ 'loading'|trans({}, 'messages') }}</div>#}
                 <div class="table-responsive"><table class="table table-bordered">
                         <thead>
                         <tr>
                             <th>N°</th>
-                            <th>Date</th>
-                            <th>N°Card</th>
-                            <th>Montant</th>
-                            <th>Bouquets</th>
                             <th>Agent</th>
-                            <th>Status</th>
+                            <th>Total credit(FCFA)</th>
+                            <th>Total activations(FCFA)</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {% for item in activactions %}
+               {#         {% for item in activactions %}
                             <tr>
                                 <td>{{ loop.index }}</td>
                                 <td>{{ item.createdAt|date("Y-m-d h:i") }}</td>
                                 <td>{{ item.card.numerocard }}</td>
                                 <td>{{ item.amount }}</td>
-                                <td>{{ item.bouquets|join(',')}}</td>
-                                <td>{% if item.createdBy is not null %}{{ item.createdBy.compte.name }}{% endif %}</td>
-                                <td>{{ item.status }}</td>
                             </tr>
-                        {% endfor %}
+                        {% endfor %}#}
                         </tbody>
                     </table></div>
 
@@ -69,18 +59,22 @@
     <script>
         $(function () {
             $('#souscription_btn').click(function () {
-                var url = Routing.generate('etatsouscription', {
+                var url = Routing.generate('etatsouscriptionbyagent', {
                     'to': $('#to').val(),
                     'at': $('#at').val(),
+                    'agent': $('#agent_select').val(),
                 });
+                console.log(url)
                 window.open(url,'_parent');
             })
             $('#print_souscription').click(function () {
-                var url = Routing.generate('souscription_export_xls', {
+                var url = Routing.generate('souscription_agent_export_xls', {
                     'to': $('#to').val(),
                     'at': $('#at').val(),
+                    'agent': $('#agent_select').val(),
                 });
-                window.open(url,'_blank');
+                console.log(url)
+                window.open(url,'_parent');
             })
         });
 

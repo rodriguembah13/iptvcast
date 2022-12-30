@@ -13,6 +13,7 @@ use App\Entity\Personnel;
 use App\Entity\RechargeWallet;
 use App\Entity\Souscription;
 use App\Entity\User;
+use App\Repository\ActivationRepository;
 use App\Repository\AgenceRepository;
 use App\Repository\BouquetRepository;
 use App\Repository\CardCustomerRepository;
@@ -33,6 +34,7 @@ use Omines\DataTablesBundle\Column\TextColumn;
 use Omines\DataTablesBundle\Column\TwigColumn;
 use Omines\DataTablesBundle\DataTableFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,6 +56,7 @@ class DefaultController extends AbstractController
     private $souscriptionRepository;
     private $cardcustomerRepository;
     private $agenceRepository;
+    private $activationRepository;
     private $personnelRepository;
     private $walletrechargeRepository;
     private $cardRepository;
@@ -61,14 +64,21 @@ class DefaultController extends AbstractController
     private $logger;
 
     /**
+     * @param CardRepository $cardRepository
+     * @param RechargeWalletRepository $rechargeWalletRepository
+     * @param CardCustomerRepository $cardCustomerRepository
+     * @param SouscriptionRepository $souscriptionRepository
      * @param CustomerRepository $customerRepository
+     * @param PersonnelRepository $personnelRepository
      * @param LoggerInterface $logger
+     * @param UserPasswordHasherInterface $passwordEncoder
+     * @param AgenceRepository $agenceRepository
      * @param BouquetRepository $bouquetRepository
      * @param EndpointService $endpointService
      * @param DataTableFactory $dataTableFactory
      * @param ParameterBagInterface $parameterBag
      */
-    public function __construct(CardRepository $cardRepository,RechargeWalletRepository $rechargeWalletRepository,
+    public function __construct(ActivationRepository $activationRepository,CardRepository $cardRepository,RechargeWalletRepository $rechargeWalletRepository,
                                 CardCustomerRepository $cardCustomerRepository,
                                 SouscriptionRepository $souscriptionRepository,
                                 CustomerRepository $customerRepository,PersonnelRepository $personnelRepository,
@@ -89,6 +99,7 @@ class DefaultController extends AbstractController
         $this->personnelRepository=$personnelRepository;
         $this->passwordEncoder = $passwordEncoder;
         $this->walletrechargeRepository=$rechargeWalletRepository;
+        $this->activationRepository=$activationRepository;
     }
 
     /**
@@ -450,7 +461,7 @@ class DefaultController extends AbstractController
         ]);
     }
     /**
-     * @Route("/etatsouscriptionagent", name="etatsouscriptionagent")
+     * @Route("/etatsouscriptionagent", name="etatsouscriptionagent",options={"expose"=true})
      */
     public function etatsouscripagent(Request $request): Response
     {
@@ -525,74 +536,94 @@ class DefaultController extends AbstractController
         ]);
     }
     /**
-     * @Route("/etatsouscription", name="etatsouscription")
+     * @Route("/recapsoucripteur", name="recapsoucripteur",options={"expose"=true})
      */
-    public function etatsouscripall(Request $request): Response
+    public function recapaSoucription(Request $request): Response
     {
         $user=$this->getUser();
         if (is_null($request->get('at'))){
             $at=date("Y-m-d");
             $to=date("Y-m-d");
+            // $activations=$this->activationRepository->findByAllbydate($at,$to);
         }else{
-            $at=$request->get('at');
-            $to=$request->get('to');
+            $at=date($request->get('at'));
+            $to=date($request->get('to'));
+
         }
-        $table = $this->dataTableFactory->create()
-            ->add('createdAt', DateTimeColumn::class, [
-                'label' => 'Date ',
-                'format' => "Y-m-d h:m"
-            ])
-            ->add('card', TextColumn::class, [
-                'label' => 'N° card',
-                'field' => 'card.numerocard'
-            ])
-            ->add('amount', TextColumn::class, [
-                'label' => 'Montant',
-                'render' => function ($value, $context) {
-                    return '<span>' . $value . '</span>';
-                }
-            ])
-            ->add('bouquets', TwigColumn::class, [
-                'label' => 'Bouquets',
-                'template' => 'default/buttons/activation.html.twig',
-                'render' => function ($value, $context) {
-                    return $value;
-                }])
-            ->add('status', TextColumn::class, [
-                'className' => 'buttons',
-                'label' => 'status',
-                // 'template' => 'user/status.html.twig',
-                'render' => function ($value, $context) {
-                    if ($value == Activation::SUCCESS) {
-                        return '<a class="btn btn-sm btn-success">' . $value . '</a>';
-                    } elseif ($value == Souscription::PENDING) {
-                        return '<a class="btn btn-sm btn-warning">' . $value . '</a>';
-                    } else {
-                        return '<a class="btn btn-sm btn-danger">' . $value . '</a>';
-                    }
-                }])
-            ->createAdapter(ORMAdapter::class, [
-                'entity' => Activation::class,
-                'query' => function (QueryBuilder $builder) use($at,$to) {
-                    $builder
-                        ->select('souscription', 'card')
-                        ->from(Activation::class, 'souscription')
-                        ->andWhere('souscription.status = :satus')
-                        ->setParameter('satus', Activation::SUCCESS)
-                        ->andWhere('souscription.createdAt >= :begin')
-                        ->andWhere('souscription.createdAt < :end')
-                        ->setParameter('begin',$at )
-                        ->setParameter('end', $to)
-                        ->join('souscription.card', 'card')
-                        ->orderBy('souscription.id', 'DESC');
-                },
-            ])->handleRequest($request);
-        if ($table->isCallback()) {
-            return $table->getResponse();
+        $activations=$this->activationRepository->findByAllbydate($at,$to);
+        $sum=0;
+        foreach ($activations as $activation){
+            $sum+=$activation->getAmount();
         }
-        return $this->render('default/etatsouscription.html.twig', [
-            'datatable' => $table,
+        return $this->render('default/recapitilatif.html.twig', [
+            //'datatable' => $table,
+            'activactions' => $activations,
+            'sum'=>$sum,
+            'title' => "Recapitulatif"
+        ]);
+    }
+    /**
+     * @Route("/etatsouscription", name="etatsouscription",options={"expose"=true})
+     */
+    public function etatsouscripall(Request $request): Response
+    {
+        $user=$this->getUser();
+       if (is_null($request->get('at'))){
+            $at=date("Y-m-d");
+            $to=date("Y-m-d");
+          // $activations=$this->activationRepository->findByAllbydate($at,$to);
+        }else{
+            $at=date($request->get('at'));
+            $to=date($request->get('to'));
+
+        }
+        $activations=$this->activationRepository->findByAllbydate($at,$to);
+       $sum=0;
+       foreach ($activations as $activation){
+           $sum+=$activation->getAmount();
+       }
+               return $this->render('default/etatsouscription.html.twig', [
+            //'datatable' => $table,
+            'activactions' => $activations,
+            'sum'=>$sum,
             'title' => "Etats souscriptions"
+        ]);
+    }
+    /**
+     * @Route("/etatsouscriptionbyagent", name="etatsouscriptionbyagent",options={"expose"=true})
+     */
+    public function etatsouscripbyagent(Request $request): Response
+    {
+        if (is_null($request->get('at'))){
+            $at=date("Y-m-d");
+            $to=date("Y-m-d");
+            // $activations=$this->activationRepository->findByAllbydate($at,$to);
+        }else{
+            $at=date($request->get('at'));
+            $to=date($request->get('to'));
+        }
+        if (is_null($request->get('agent'))){
+            $activations=[];
+        }else{
+            $agent=$this->personnelRepository->find($request->get('agent'));
+            $wallets=$this->walletrechargeRepository->findByAllbydateAndAgent($at,$to,$agent);
+            $activations=$this->activationRepository->findByAllbydateAndAgent($at,$to,$agent);
+        }
+
+        $sum=0;
+        $sumwallet=0;
+        foreach ($activations as $activation){
+            $sum+=$activation->getAmount();
+        }
+        foreach ($wallets as $wallet){
+            $sumwallet+=$wallet->getAmount();
+        }
+        return $this->render('default/etatsouscriptionbyagent.html.twig', [
+            'activactions' => $activations,
+            'sum'=>$sum,
+            'recharge'=>$sumwallet,
+            'agents'=>$this->personnelRepository->findAll(),
+            'title' => "Etats souscriptions par agent"
         ]);
     }
     /**
@@ -1446,11 +1477,148 @@ class DefaultController extends AbstractController
             $entityManager->persist($wallet);
             $entityManager->flush();
         }
+        $sum=0.0;
         $wallets=$this->walletrechargeRepository->findBy(['personnel'=>$personnel]);
+        foreach ($wallets as $wallet){
+            $sum+=$wallet->getAmount();
+        }
         return $this->render('default/edit/walletcard.html.twig', [
             'title' => "Wallet agent",
             'personnel' => $personnel,
-            'recharges' => $wallets
+            'recharges' => $wallets,
+            'total' => $sum
         ]);
+    }
+    /**
+     * @Route("/export/souscription", name="souscription_export_xls", methods={"GET","POST"},options={"expose"=true})
+     */
+    public function export(Request $request): Response
+    {
+        // Create new Spreadsheet object
+        $spreadsheet = new Spreadsheet();
+        if (is_null($request->get('at'))){
+            $at=date("Y-m-d");
+            $to=date("Y-m-d");
+        }else{
+            $at=date($request->get('at'));
+            $to=date($request->get('to'));
+
+        }
+        $activations=$this->activationRepository->findByAllbydate($at,$to);
+        // Set document properties
+        $spreadsheet->getProperties()->setCreator('Creativsoft-e')
+            ->setLastModifiedBy('Rodrigue')
+            ->setTitle('Office 2007 XLSX Test Document')
+            ->setSubject('Office 2007 XLSX Test Document')
+            ->setDescription('Test document for Office 2007 XLSX, generated using PHP classes.')
+            ->setKeywords('office 2007 openxml php')
+            ->setCategory('Test result file');
+
+        // Add some data
+        $spreadsheet->setActiveSheetIndex(0)
+            ->setCellValue('A1', strtoupper('Date'))
+            ->setCellValue('B1', strtoupper('N° card'))
+            ->setCellValue('C1', strtoupper('Montant'))
+            ->setCellValue('D1', strtoupper('bouquets'))
+            ->setCellValue('E1', strtoupper('agent'));
+        $i = 2;
+        foreach ($activations as $student) {
+            $spreadsheet->setActiveSheetIndex(0)
+                ->setCellValue('A' . $i, $student->getCreatedAt()->format("Y-m-d h:i"))
+                ->setCellValue('B' . $i, $student->getCard()->getNumerocard())
+                ->setCellValue('C' . $i, $student->getAmount())
+                ->setCellValue('D' . $i,implode(",",$student->getBouquets()))
+                ->setCellValue('E' . $i, is_null($student->getCreatedBy())?"": $student->getCreatedBy()->getCompte()->getName());
+            ++$i;
+        }
+        // Rename worksheet
+        $spreadsheet->getActiveSheet()->setTitle('Activation'.$at.''.$to);
+
+        // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+        $spreadsheet->setActiveSheetIndex(0);
+
+        // Redirect output to a client’s web browser (Xls)
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="activation'.$at.' au'.$to.'.xls"');
+        header('Cache-Control: max-age=0');
+        // If you're serving to IE 9, then the following may be needed
+        header('Cache-Control: max-age=1');
+
+        // If you're serving to IE over SSL, then the following may be needed
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+        header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+        header('Pragma: public'); // HTTP/1.0
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xls');
+        $writer->save('php://output');
+    }
+    /**
+     * @Route("/export/souscriptionagent", name="souscription_agent_export_xls", methods={"GET","POST"},options={"expose"=true})
+     */
+    public function exportByAgent(Request $request): Response
+    {
+        // Create new Spreadsheet object
+        $spreadsheet = new Spreadsheet();
+        if (is_null($request->get('at'))){
+            $at=date("Y-m-d");
+            $to=date("Y-m-d");
+        }else{
+            $at=date($request->get('at'));
+            $to=date($request->get('to'));
+        }
+        if (is_null($request->get('agent'))){
+            $activations=[];
+        }else{
+            $agent=$this->personnelRepository->find($request->get('agent'));
+            $activations=$this->activationRepository->findByAllbydateAndAgent($at,$to,$agent);
+        }
+        // Set document properties
+        $spreadsheet->getProperties()->setCreator('Creativsoft-e')
+            ->setLastModifiedBy('Rodrigue')
+            ->setTitle('Office 2007 XLSX Test Document')
+            ->setSubject('Office 2007 XLSX Test Document')
+            ->setDescription('Test document for Office 2007 XLSX, generated using PHP classes.')
+            ->setKeywords('office 2007 openxml php')
+            ->setCategory('Test result file');
+
+        // Add some data
+        $spreadsheet->setActiveSheetIndex(0)
+            ->setCellValue('A1', strtoupper('Date'))
+            ->setCellValue('B1', strtoupper('N° card'))
+            ->setCellValue('C1', strtoupper('Montant'))
+            ->setCellValue('D1', strtoupper('bouquets'))
+            ->setCellValue('E1', strtoupper('agent'));
+        $i = 2;
+        foreach ($activations as $student) {
+            $spreadsheet->setActiveSheetIndex(0)
+                ->setCellValue('A' . $i, $student->getCreatedAt()->format("Y-m-d h:i"))
+                ->setCellValue('B' . $i, $student->getCard()->getNumerocard())
+                ->setCellValue('C' . $i, $student->getAmount())
+                ->setCellValue('D' . $i, implode(",",$student->getBouquets()))
+                ->setCellValue('E' . $i, is_null($student->getCreatedBy())?"": $student->getCreatedBy()->getCompte()->getName());
+            ++$i;
+        }
+        // Rename worksheet
+        $spreadsheet->getActiveSheet()->setTitle('Activation'.$at.''.$to);
+
+        // Set active sheet index to the first sheet, so Excel opens this as the first sheet
+        $spreadsheet->setActiveSheetIndex(0);
+
+        // Redirect output to a client’s web browser (Xls)
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="activation du '.$at.' au'.$to.'.xls"');
+        header('Cache-Control: max-age=0');
+        // If you're serving to IE 9, then the following may be needed
+        header('Cache-Control: max-age=1');
+
+        // If you're serving to IE over SSL, then the following may be needed
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+        header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+        header('Pragma: public'); // HTTP/1.0
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xls');
+        $writer->save('php://output');
     }
 }

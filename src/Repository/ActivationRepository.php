@@ -47,7 +47,7 @@ class ActivationRepository extends ServiceEntityRepository
     public function findByAllorder(): array
     {
         return $this->createQueryBuilder('a')
-            ->orderBy('a.createdAt', 'DESC')
+            ->orderBy('a.id', 'DESC')
             ->getQuery()
             ->getResult()
         ;
@@ -71,7 +71,41 @@ class ActivationRepository extends ServiceEntityRepository
                 ->getOneOrNullResult()
             ;
     }
-
+    /**
+     * @return Activation[] Returns an array of Activation objects
+     */
+    public function findByAllbydate($at,$to): array
+    {
+        $qb = $this->createQueryBuilder('s');
+        $qb->select('s');
+        $qb->leftJoin('s.createdBy','f');
+      //  $qb->andWhere($qb->expr()->between('s.createdAt',$at,$to));
+        $qb->andWhere('s.createdAt >= :begin')
+            ->andWhere('s.createdAt <= :end')
+            ->setParameter('begin',$at )
+            ->setParameter('end', $to.' 23:59')
+            ->orderBy('s.id', 'DESC');
+        //$qb->orderBy('s.id');
+        return $qb->getQuery()->getResult();
+    }
+    /**
+     * @return Activation[] Returns an array of Activation objects
+     */
+    public function findByAllbydateAndAgent($at,$to,$agent): array
+    {
+        $qb = $this->createQueryBuilder('s');
+        $qb->select('s');
+        $qb->leftJoin('s.createdBy','f');
+          $qb->andWhere('s.createdBy = :agent')
+          ->setParameter('agent',$agent);
+        $qb->andWhere('s.createdAt >= :begin')
+            ->andWhere('s.createdAt <= :end')
+            ->setParameter('begin',$at )
+            ->setParameter('end', $to.' 23:59')
+            ->orderBy('s.id', 'DESC');
+        //$qb->orderBy('s.id');
+        return $qb->getQuery()->getResult();
+    }
 //    public function findOneBySomeField($value): ?Activation
 //    {
 //        return $this->createQueryBuilder('a')

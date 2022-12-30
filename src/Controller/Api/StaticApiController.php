@@ -264,8 +264,8 @@ class StaticApiController extends AbstractFOSRestController
                 'numero' => $card->getCard()->getNumerocard(),
                 'amount' => $card->getAmount(),
                 'agent' => $card->getCreatedBy()->getCompte()->getName(),
-                'created' => $card->getCreatedAt()->format('Y-m-d h:m'),
-                'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
+                'created' => $card->getCreatedAt()->format('Y-m-d h:i'),
+                'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:i'),
                 'monthto' => $card->getMonthto(),
                 'id' => $card->getId(),
             ];
@@ -295,8 +295,8 @@ class StaticApiController extends AbstractFOSRestController
                     'amount' => $card->getAmount(),
                     'agent' => $card->getCreatedBy()->getCompte()->getName(),
                     'status' => $card->getStatus(),
-                    'created' => $card->getCreatedAt()->format('Y-m-d h:m'),
-                    'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
+                    'created' => $card->getCreatedAt()->format('Y-m-d h:i'),
+                    'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:i'),
                     'monthto' => $card->getMonthto(),
                     'id' => $card->getId(),
                 ];
@@ -324,8 +324,8 @@ class StaticApiController extends AbstractFOSRestController
                 'amount' => $card->getAmount(),
                 'status' => $card->getStatus(),
                 'agent' => $card->getCreatedBy()->getCompte()->getName(),
-                'created' => $card->getCreatedAt()->format('Y-m-d h:m'),
-                'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:m'),
+                'created' => $card->getCreatedAt()->format('Y-m-d h:i'),
+                'expired' => $card->getCreatedAt()->modify($mod)->format('Y-m-d h:i'),
                 'monthto' => $card->getMonthto(),
                 'id' => $card->getId(),
             ];
@@ -537,8 +537,8 @@ class StaticApiController extends AbstractFOSRestController
                     'numero' => $bouquet->getNumero(),
                     'price' => $status ? 0 : 1,
                     'id' => $bouquet->getId(),
-                    'created' => $status ? $activation->getCreatedAt()->format('Y-m-d h:m') : " ",
-                    'expired' => $status ? $activation->getCreatedAt()->modify($mod)->format('Y-m-d h:m') : " ",
+                    'created' => $status ? $activation->getCreatedAt()->format('Y-m-d h:i') : " ",
+                    'expired' => $status ? $activation->getCreatedAt()->modify($mod)->format('Y-m-d h:i') : " ",
                     'bouquetid' => $bouquet->getBouquetid(),
                 ];
             }
