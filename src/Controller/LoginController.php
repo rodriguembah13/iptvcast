@@ -3,8 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -149,4 +147,5 @@ class LoginController extends AbstractController
     throw new \Exception("Don\'t forget to active logout");
 
     }
+
 }

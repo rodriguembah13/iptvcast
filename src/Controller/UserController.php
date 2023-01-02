@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 /**
  * @Route("/user")
@@ -210,5 +211,29 @@ class UserController extends AbstractController
         }
 
         return new JsonResponse('success', 200);
+    }
+    /**
+     * @Route("/changepassword", name="app_changepassword")
+     */
+    public function changepassword(Request $request)
+    {
+        if ($request->getMethod()=="POST"){
+            $user=$this->getUser();
+            $oldpass = $request->get("oldpassword");
+            $newpassword =$request->get("password");
+            $isValid = $this->passwordEncoder->isPasswordValid($user, $oldpass);
+            if (!$isValid){
+                throw new BadCredentialsException("Access not Authorized");
+            }
+            $hashedPassword = $this->passwordEncoder->hashPassword($user, $newpassword);
+            $user->setPassword($hashedPassword);
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->flush();
+           return $this->redirectToRoute('app_logout');
+        }
+        return $this->render('login/changepassword.html.twig', [
+            'title' => 'changer le password',
+        ]);
+
     }
 }

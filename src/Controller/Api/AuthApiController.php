@@ -145,8 +145,8 @@ class AuthApiController extends AbstractFOSRestController
     {
         $body = json_decode($request->getContent(), true);
         $user=$this->userRepository->find($body['id']);
-        $oldpass = $body['password'];
-        $newpassword = $body['cpassword'];
+        $oldpass = $body['cpassword'];
+        $newpassword = $body['password'];
         $isValid = $this->passwordEncoder->isPasswordValid($user, $oldpass);
         if (!$isValid){
             throw new BadCredentialsException("Access not Authorized");
