@@ -48,9 +48,15 @@ class Personnel
      */
     private $rechargeWallets;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Reclamation::class, mappedBy="agent")
+     */
+    private $reclamations;
+
     public function __construct()
     {
         $this->rechargeWallets = new ArrayCollection();
+        $this->reclamations = new ArrayCollection();
     }
     public function getId(): ?int
     {
@@ -149,6 +155,36 @@ class Personnel
             // set the owning side to null (unless already changed)
             if ($rechargeWallet->getPersonnel() === $this) {
                 $rechargeWallet->setPersonnel(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reclamation>
+     */
+    public function getReclamations(): Collection
+    {
+        return $this->reclamations;
+    }
+
+    public function addReclamation(Reclamation $reclamation): self
+    {
+        if (!$this->reclamations->contains($reclamation)) {
+            $this->reclamations[] = $reclamation;
+            $reclamation->setAgent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReclamation(Reclamation $reclamation): self
+    {
+        if ($this->reclamations->removeElement($reclamation)) {
+            // set the owning side to null (unless already changed)
+            if ($reclamation->getAgent() === $this) {
+                $reclamation->setAgent(null);
             }
         }
 

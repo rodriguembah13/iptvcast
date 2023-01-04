@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Reclamations
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="row justify-content-between">
+                    <div class="col-md-8">
+                        <h4>Reclamations</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3 mt-md-0 float-end">
+                            <button type="button" class="btn btn-success waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#custom-modal"><i class="mdi mdi-plus-circle me-1"></i> Add agence</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="reclamations" class="table-responsive">{{ 'loading'|trans({}, 'messages') }}</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#reclamations').initDataTables({{ datatable_settings(datatable) }});
+        });
+    </script>
+{% endblock %}
+
+

@@ -1,0 +1,115 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Reclamations
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="row justify-content-between">
+                    <div class="col-md-8">
+                        <h4>Reclamentations</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post"> <div class="row">
+
+                    <div class="mb-3 col-md-3">
+                        <label for="name" class="form-label">Card</label>
+                        <input type="text" name="card" class="form-control" id="card" placeholder="Card">
+                    </div>
+                    <div class="mb-3 col-md-3">
+                        <label for="name" class="form-label">Date</label>
+                        <input type="date" name="datecreation" class="form-control" id="datecreation" placeholder="Date">
+                    </div>
+                    <div class="col-md-3 pt-3">
+                        <button type="submit" id="search_card_" class="btn btn-danger"><i class="mdi mdi-search-web"></i>Search</button>
+                    </div>
+
+                </div></form>
+                <div class="row">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>N° card</th>
+                            <th>Montant</th>
+                            <th>Bouquet</th>
+                            <th>Agent</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in activations %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.card.numerocard }}</td>
+                                <td>{{ item.amount }}</td>
+                                <td>{{ item.bouquets|join(',')}}</td>
+                                <td>{% if item.createdBy is not null %}{{ item.createdBy.compte.name }}{% endif %}</td>
+                                <td>{{ item.status }}</td>
+                                <td><button class="btn btn-primary" onclick="deleteItem({{ item.id }})"><i class="mdi mdi-trash-can"></i></button></td>
+                            </tr>
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#search_card').click(function () {
+                $.ajax({
+                    url: "{{ path('findreclamation_ajax') }}",
+                    type: "GET",
+                    dataType: "JSON",
+                    data: {
+                        id:$('#card').val(),
+                        bouquet:$('#bouquet').val(),
+                        datecreation:$('#datecreation').val(),
+                    },
+                    success: function (data) {
+                        window.location.reload();
+                    },
+                    error: function (err) {
+                        alert("Error: Item can't delete");
+                        setTimeout(function () {
+                            $("#overlay").fadeOut(300);
+                        }, 500);
+                    }
+                });
+            })
+        });
+        function deleteItem(id) {
+            $.ajax({
+                url: "{{ path('findreclamation_ajax') }}",
+                type: "GET",
+                dataType: "JSON",
+                data: {
+                    id:id,
+                },
+                success: function (data) {
+                    window.location.reload();
+                },
+                error: function (err) {
+                    alert("Error: Item can't delete");
+                    setTimeout(function () {
+                        $("#overlay").fadeOut(300);
+                    }, 500);
+                }
+            });
+        }
+    </script>
+{% endblock %}
+

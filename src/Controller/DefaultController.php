@@ -11,6 +11,7 @@ use App\Entity\CardPending;
 use App\Entity\Customer;
 use App\Entity\Personnel;
 use App\Entity\RechargeWallet;
+use App\Entity\Reclamation;
 use App\Entity\Souscription;
 use App\Entity\User;
 use App\Repository\ActivationRepository;
@@ -151,7 +152,45 @@ class DefaultController extends AbstractController
             'title' => "Success page"
         ]);
     }
-
+    /**
+     * @Route("/reclamations", name="reclamations")
+     * @param Request $request
+     * @return Response
+     */
+    public function reclamations(Request $request): Response
+    {
+        $table = $this->dataTableFactory->create()
+            ->add('card', TextColumn::class, [
+                'label' => 'Card',
+            ])
+            ->add('amount', TextColumn::class, [
+                'label' => 'Amount',
+            ])
+            ->add('createdAt', DateTimeColumn::class, [
+                'label' => 'Date creation',
+                'format' => "Y-m-d h:i"
+            ])
+            ->add('reclamationdate', DateTimeColumn::class, [
+                'label' => 'Date reclamation',
+                'format' => "Y-m-d h:i"
+            ])
+            ->createAdapter(ORMAdapter::class, [
+                'entity' => Reclamation::class,
+                'query' => function (QueryBuilder $builder) {
+                    $builder
+                        ->select('reclamation')
+                        ->from(Reclamation::class, 'reclamation')
+                        ->orderBy('reclamation.id','ASC');
+                },
+            ])->handleRequest($request);
+        if ($table->isCallback()) {
+            return $table->getResponse();
+        }
+        return $this->render('default/reclamations.html.twig', [
+            'datatable' => $table,
+            'title' => "Reclamations"
+        ]);
+    }
     /**
      * @Route("/bouquetchanel", name="bouquetchanel")
      * @param Request $request
@@ -287,7 +326,7 @@ class DefaultController extends AbstractController
         $table = $this->dataTableFactory->create()
             ->add('createdAt', DateTimeColumn::class, [
                 'label' => 'Date ',
-                'format' => "Y-m-d h:m"
+                'format' => "Y-m-d h:i:s"
             ])
             ->add('card', TextColumn::class, [
                 'label' => 'N° card',
@@ -348,7 +387,7 @@ class DefaultController extends AbstractController
         $table = $this->dataTableFactory->create()
             ->add('createdAt', DateTimeColumn::class, [
                 'label' => 'Date ',
-                'format' => "Y-m-d h:m"
+                'format' => "Y-m-d h:i"
             ])
             ->add('card', TextColumn::class, [
                 'label' => 'N° card',
@@ -1490,6 +1529,28 @@ class DefaultController extends AbstractController
         ]);
     }
     /**
+     * @Route("/reclamation/card/", name="reclamation_card")
+     * @param Personnel $personnel
+     * @param Request $request
+     * @return Response
+     */
+    public function reclamation_card(Request $request): Response
+    {
+        $activactions=[];
+        if ($request->getMethod()=="POST"){
+            $card = $this->cardRepository->findOneBy(['numerocard'=>$request->get('card')]);
+            $bouquet = $request->get('bouquet');
+            $date = $request->get('datecreation');
+            dump($date);
+            $activactions=$this->activationRepository->findCardAndDate($card,$date);
+       // $activactions[]=$activaction;
+        }
+        return $this->render('default/edit/reclamation_card.html.twig', [
+            'title' => "Wallet agent",
+            'activations'=>$activactions
+        ]);
+    }
+    /**
      * @Route("/export/souscription", name="souscription_export_xls", methods={"GET","POST"},options={"expose"=true})
      */
     public function export(Request $request): Response
@@ -1620,5 +1681,28 @@ class DefaultController extends AbstractController
 
         $writer = IOFactory::createWriter($spreadsheet, 'Xls');
         $writer->save('php://output');
+    }
+
+    /**
+     * @Route("/findreclamation/ajax", name="findreclamation_ajax", methods={"GET"})
+     */
+    public function findreclamationAjax(Request $request): JsonResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $reclamation=new Reclamation();
+        $activaction=$this->activationRepository->find($request->get('id'));
+        $reclamation->setAmount($activaction->getAmount());
+        $reclamation->setStatus(false);
+        $reclamation->setCreatedAt(new DateTime('now'));
+
+        $reclamation->setBouquets($activaction->getBouquets());
+        $reclamation->setAgent($activaction->getCreatedBy());
+       $reclamation->setCard($activaction->getCard()->getNumerocard());
+        $reclamation->setIssend(false);
+        $reclamation->setReclamationdate(new DateTime($activaction->getCreatedAt()->format('Y-m-d h:i:s')));
+        $entityManager->persist($reclamation);
+        $entityManager->remove($activaction);
+        $entityManager->flush();
+        return new JsonResponse([], 200);
     }
 }

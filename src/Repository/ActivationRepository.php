@@ -106,6 +106,23 @@ class ActivationRepository extends ServiceEntityRepository
         //$qb->orderBy('s.id');
         return $qb->getQuery()->getResult();
     }
+    /**
+     * @return Activation[] Returns an array of Activation objects
+     */
+    public function findCardAndDate($card,$date): array
+    {
+        $qb = $this->createQueryBuilder('s');
+        $qb->select('s');
+        $qb->andWhere('s.card = :card')
+            ->setParameter('card',$card);
+        $qb->andWhere('s.createdAt >= :begin')
+            ->andWhere('s.createdAt <= :end')
+            ->setParameter('begin',$date )
+            ->setParameter('end', $date.' 23:59')
+            ->orderBy('s.id', 'DESC');
+        //$qb->orderBy('s.id');
+        return $qb->getQuery()->getResult();
+    }
 //    public function findOneBySomeField($value): ?Activation
 //    {
 //        return $this->createQueryBuilder('a')
