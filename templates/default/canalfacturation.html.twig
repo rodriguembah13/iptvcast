@@ -52,7 +52,7 @@
                                 <td>{{ loop.index }}</td>
                                 <td>{{ item.createdAt|date("Y-m-d h:i") }}</td>
                                 <td>{{ item.card.numerocard }}</td>
-                                <td>{{ item.amount }}</td>
+                                <td>{{ pricecanal }}</td>
                                 <td>{{ item.bouquets|join(',')}}</td>
                                 <td>{% if item.createdBy is not null %}{{ item.createdBy.compte.name }}{% endif %}</td>
                                 <td>{{ item.status }}</td>
