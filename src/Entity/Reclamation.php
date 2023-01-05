@@ -21,6 +21,10 @@ class Reclamation
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $card;
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $bouquetid;
 
     /**
      * @ORM\ManyToOne(targetEntity=Personnel::class, inversedBy="reclamations")
@@ -56,6 +60,22 @@ class Reclamation
      * @ORM\Column(type="boolean")
      */
     private $issend;
+
+    /**
+     * @return mixed
+     */
+    public function getBouquetid()
+    {
+        return $this->bouquetid;
+    }
+
+    /**
+     * @param mixed $bouquetid
+     */
+    public function setBouquetid($bouquetid): void
+    {
+        $this->bouquetid = $bouquetid;
+    }
 
     public function getId(): ?int
     {

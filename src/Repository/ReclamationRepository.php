@@ -38,7 +38,16 @@ class ReclamationRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-
+    public function findOneByFirst()
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.status = 0')
+            ->setMaxResults(1)
+            ->orderBy('s.id', 'ASC')
+            ->getQuery()
+            ->getOneOrNullResult()
+            ;
+    }
 //    /**
 //     * @return Reclamation[] Returns an array of Reclamation objects
 //     */

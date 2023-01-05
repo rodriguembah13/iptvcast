@@ -9,8 +9,10 @@ use App\Repository\BouquetRepository;
 use App\Repository\CardPendingRepository;
 use App\Repository\CardRepository;
 use App\Repository\CustomerRepository;
+use App\Repository\ReclamationRepository;
 use App\Service\EndpointService;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Psr\Log\LoggerInterface;
@@ -25,6 +27,7 @@ class IptvApiController extends AbstractFOSRestController
     private $bouquetRepository;
     private $cardRepository;
     private $cardpendingRepository;
+    private $reclamationRepository;
     private $doctrine;
 
     /**
@@ -36,7 +39,7 @@ class IptvApiController extends AbstractFOSRestController
      * @param LoggerInterface $logger
      * @param EndpointService $endpointService
      */
-    public function __construct(CardPendingRepository $cardPendingRepository, EntityManagerInterface $entityManager,
+    public function __construct(ReclamationRepository $reclamationRepository,CardPendingRepository $cardPendingRepository, EntityManagerInterface $entityManager,
                                 CardRepository $cardRepository, BouquetRepository $bouquetRepository, LoggerInterface $logger, EndpointService $endpointService)
     {
         $this->logger = $logger;
@@ -44,6 +47,7 @@ class IptvApiController extends AbstractFOSRestController
         $this->bouquetRepository = $bouquetRepository;
         $this->cardRepository = $cardRepository;
         $this->cardpendingRepository = $cardPendingRepository;
+        $this->reclamationRepository=$reclamationRepository;
         $this->doctrine = $entityManager;
     }
 
@@ -91,6 +95,7 @@ class IptvApiController extends AbstractFOSRestController
     /**
      * @Rest\Get("/v1/activatecard", name="api_activatecard")
      * @return Response
+     * @throws Exception
      */
     public function activateCard()
     {
@@ -123,6 +128,7 @@ class IptvApiController extends AbstractFOSRestController
 
     /**
      * @Rest\Post("/v1/reponseactivatecard", name="api_activatecardresponse")
+     * @param Request $request
      * @return Response
      */
     public function activateCardResponse(Request $request)
@@ -141,6 +147,61 @@ class IptvApiController extends AbstractFOSRestController
         $this->logger->info($res['code']);
         $this->logger->info($res['cardid']);
         $this->logger->info($res['id']);
+        $this->doctrine->flush();
+        $view = $this->view([], Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Rest\Get("/v1/reclamationsend", name="api_reclamationsend")
+     * @return Response
+     * @throws Exception
+     */
+    public function reclamationRequet()
+    {
+        $data = $this->reclamationRepository->findOneByFirst();
+        if (is_null($data)){
+            $values=[
+                'res'=>400
+            ];
+        }else{
+            $les=new \DateTime('now',new \DateTimeZone('Africa/Douala'));
+            $date=$les->modify('-12 month')->format('Y-m-d').'16:59:59';
+            $now=new \DateTime($date,new \DateTimeZone('Africa/Douala'));
+
+            $values = [
+                'res'=>200,
+                'id' => $data->getId(),
+                'card_id' => intval($data->getCard()),
+                'card_status' => 1,
+                'product_id'=>$data->getBouquetid(),
+                'send_or_not' => 1,
+                'expired_time' => $now->format('Y-m-d h:m:s'),
+                'begin_time' => $now->format('Y-m-d h:m:s'),
+                'expired_timestamp'=>date_timestamp_get($now),
+                'begin_timestamp'=>date_timestamp_get($now)
+            ];
+        }
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Rest\Post("/v1/reponsereclamation", name="api_reponsereclamation")
+     * @param Request $request
+     * @return Response
+     */
+    public function reclamationResponse(Request $request)
+    {
+        $res = json_decode($request->getContent(), true);
+        $this->logger->info("----------activation ok---------------");
+        $pending = $this->reclamationRepository->find($res['id']);
+        if ($res['code'] == 0) {
+            $pending->setIssend(true);
+            $pending->setStatus(true);
+        } else {
+            $pending->setStatus(false);
+        }
         $this->doctrine->flush();
         $view = $this->view([], Response::HTTP_OK, []);
         return $this->handleView($view);

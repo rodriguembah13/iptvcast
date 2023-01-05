@@ -1541,7 +1541,6 @@ class DefaultController extends AbstractController
             $card = $this->cardRepository->findOneBy(['numerocard'=>$request->get('card')]);
             $bouquet = $request->get('bouquet');
             $date = $request->get('datecreation');
-            dump($date);
             $activactions=$this->activationRepository->findCardAndDate($card,$date);
        // $activactions[]=$activaction;
         }
@@ -1685,22 +1684,42 @@ class DefaultController extends AbstractController
 
     /**
      * @Route("/findreclamation/ajax", name="findreclamation_ajax", methods={"GET"})
+     * @throws Exception
      */
     public function findreclamationAjax(Request $request): JsonResponse
     {
         $entityManager = $this->getDoctrine()->getManager();
-        $reclamation=new Reclamation();
+        $resp=[];
         $activaction=$this->activationRepository->find($request->get('id'));
-        $reclamation->setAmount($activaction->getAmount());
-        $reclamation->setStatus(false);
-        $reclamation->setCreatedAt(new DateTime('now'));
-
-        $reclamation->setBouquets($activaction->getBouquets());
-        $reclamation->setAgent($activaction->getCreatedBy());
-       $reclamation->setCard($activaction->getCard()->getNumerocard());
-        $reclamation->setIssend(false);
-        $reclamation->setReclamationdate(new DateTime($activaction->getCreatedAt()->format('Y-m-d h:i:s')));
-        $entityManager->persist($reclamation);
+        for ($i=0;$i<sizeof($activaction->getBouquets());$i++){
+            $reclamation=new Reclamation();
+            $this->logger->info("---".$activaction->getBouquets()[$i]);
+            $bou=$this->bouquetRepository->findOneBy(['numero'=>$activaction->getBouquets()[$i]]);
+            $reclamation->setAmount($bou->getPrice()*$activaction->getMonthto());
+            $reclamation->setStatus(false);
+            $reclamation->setCreatedAt(new DateTime('now'));
+            $reclamation->setBouquets($activaction->getBouquets());
+            $reclamation->setBouquetid($activaction->getBouquets()[$i]);
+            $reclamation->setAgent($activaction->getCreatedBy());
+            $reclamation->setCard($activaction->getCard()->getNumerocard());
+            $reclamation->setIssend(false);
+            $reclamation->setReclamationdate(new DateTime($activaction->getCreatedAt()->format('Y-m-d h:i:s')));
+            $entityManager->persist($reclamation);
+            // card pending
+            $cardpending = new CardPending();
+            $cardpending->setCardid($activaction->getCard()->getNumerocard());
+            $cardpending->setIsdelete(true);
+            $cardpending->setSendornot(1);
+            $cardpending->setCardstatus(1);
+            $cardpending->setStatus(CardPending::SUCCESS);
+            $cardpending->setActivation($activaction->getId());
+            $cardpending->setBouquet($activaction->getBouquets()[$i]);
+            $les=new \DateTime('now',new \DateTimeZone('Africa/Douala'));
+            $date=$les->modify('-12 month')->format('Y-m-d').'16:59:59';
+            $date_line=new \DateTime($date,new \DateTimeZone('Africa/Douala'));
+            $cardpending->setExpiredtime($date_line);
+            $entityManager->persist($cardpending);
+        }
         $entityManager->remove($activaction);
         $entityManager->flush();
         return new JsonResponse([], 200);
