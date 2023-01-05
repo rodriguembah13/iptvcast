@@ -84,6 +84,8 @@ class ActivationRepository extends ServiceEntityRepository
             ->andWhere('s.createdAt <= :end')
             ->setParameter('begin',$at )
             ->setParameter('end', $to.' 23:59')
+            ->andWhere('s.status = :status')
+            ->setParameter('status',Activation::SUCCESS)
             ->orderBy('s.id', 'DESC');
         //$qb->orderBy('s.id');
         return $qb->getQuery()->getResult();
@@ -102,6 +104,8 @@ class ActivationRepository extends ServiceEntityRepository
             ->andWhere('s.createdAt <= :end')
             ->setParameter('begin',$at )
             ->setParameter('end', $to.' 23:59')
+            ->andWhere('s.status = :status')
+            ->setParameter('status',Activation::SUCCESS)
             ->orderBy('s.id', 'DESC');
         //$qb->orderBy('s.id');
         return $qb->getQuery()->getResult();
@@ -117,10 +121,11 @@ class ActivationRepository extends ServiceEntityRepository
             ->setParameter('card',$card);
         $qb->andWhere('s.createdAt >= :begin')
             ->andWhere('s.createdAt <= :end')
+            ->andWhere('s.status = :status')
+            ->setParameter('status',Activation::SUCCESS)
             ->setParameter('begin',$date )
             ->setParameter('end', $date.' 23:59')
             ->orderBy('s.id', 'DESC');
-        //$qb->orderBy('s.id');
         return $qb->getQuery()->getResult();
     }
 //    public function findOneBySomeField($value): ?Activation
