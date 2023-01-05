@@ -141,6 +141,12 @@
                             <span>Recapitulatif</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ path('canalfacturation') }}">
+                            <i class="mdi mdi-billiards"></i>
+                            <span>Facturation canal+</span>
+                        </a>
+                    </li>
                 {% endif %}
                 <li class="menu-title mt-2">Activations</li>
                 {% if is_granted('ROLE_AGENT') %}

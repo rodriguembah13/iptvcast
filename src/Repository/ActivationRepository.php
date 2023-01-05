@@ -7,6 +7,7 @@ use App\Entity\Card;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
+use function Doctrine\ORM\QueryBuilder;
 
 /**
  * @extends ServiceEntityRepository<Activation>
@@ -128,13 +129,22 @@ class ActivationRepository extends ServiceEntityRepository
             ->orderBy('s.id', 'DESC');
         return $qb->getQuery()->getResult();
     }
-//    public function findOneBySomeField($value): ?Activation
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * @return Activation[] Returns an array of Activation objects
+     */
+    public function findByNumeroAndDate($card,$begin,$end): array
+    {
+        $qb = $this->createQueryBuilder('s');
+        $qb->select('s')
+        ->leftJoin("s.card","card");
+        $qb->andWhere($qb->expr()->eq('s.bouquets',$card));
+        $qb->andWhere('s.createdAt >= :begin')
+            ->andWhere('s.createdAt <= :end')
+            ->andWhere('s.status = :status')
+            ->setParameter('status',Activation::SUCCESS)
+            ->setParameter('begin',$begin )
+            ->setParameter('end', $end.' 23:59')
+            ->orderBy('s.id', 'DESC');
+        return $qb->getQuery()->getResult();
+    }
 }

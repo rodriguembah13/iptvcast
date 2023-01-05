@@ -571,7 +571,9 @@ class DefaultController extends AbstractController
         }
         return $this->render('default/etatsouscriptionagent.html.twig', [
             'datatable' => $table,
-            'title' => "Etats souscriptions"
+            'title' => "Etats souscriptions",
+            'begin'=>$at,
+            'end'=>$to
         ]);
     }
     /**
@@ -625,7 +627,9 @@ class DefaultController extends AbstractController
             //'datatable' => $table,
             'activactions' => $activations,
             'sum'=>$sum,
-            'title' => "Etats souscriptions"
+            'title' => "Etats souscriptions",
+                   'begin'=>$at,
+                   'end'=>$to
         ]);
     }
     /**
@@ -643,7 +647,10 @@ class DefaultController extends AbstractController
         }
         if (is_null($request->get('agent'))){
             $activations=[];
+            $wallets=[];
+            $agent=null;
         }else{
+
             $agent=$this->personnelRepository->find($request->get('agent'));
             $wallets=$this->walletrechargeRepository->findByAllbydateAndAgent($at,$to,$agent);
             $activations=$this->activationRepository->findByAllbydateAndAgent($at,$to,$agent);
@@ -662,7 +669,10 @@ class DefaultController extends AbstractController
             'sum'=>$sum,
             'recharge'=>$sumwallet,
             'agents'=>$this->personnelRepository->findAll(),
-            'title' => "Etats souscriptions par agent"
+            'title' => "Etats souscriptions par agent",
+            'begin'=>$at,
+            'end'=>$to,
+            "agent"=>$agent
         ]);
     }
     /**
@@ -1547,6 +1557,48 @@ class DefaultController extends AbstractController
         return $this->render('default/edit/reclamation_card.html.twig', [
             'title' => "Wallet agent",
             'activations'=>$activactions
+        ]);
+    }
+    /**
+     * @Route("/canalfacturation/", name="canalfacturation")
+     * @param Request $request
+     * @return Response
+     */
+    public function canal_facture(Request $request): Response
+    {
+        $activactions=[];
+        $sum=0.0;
+        $canals=explode(",",$this->getParameter("CANALNUMBERS"));
+        $activs=[];
+        $end="";
+        $begin="";
+        if ($request->getMethod()=="POST"){
+            $end = $request->get('end');
+            $begin = $request->get('begin');
+            $activactions=$this->activationRepository->findByAllbydate($begin,$end);
+            for ($i=0;$i<sizeof($canals);$i++){
+                $p=$canals[$i];
+                $arrs=array_filter($activactions,function ($item)use ($p){
+                    if (in_array($p,$item->getBouquets())){
+                        return true;
+                    }
+                    return false;
+                });
+                foreach ($arrs as $activation){
+                    $sum+=$activation->getAmount();
+                    array_push($activs,$activation);
+                }
+                //$activs[]=$arrs;
+               // array_merge($activs,$arrs);
+
+            }
+        }
+        return $this->render('default/canalfacturation.html.twig', [
+            'title' => "Facturation canal+",
+            'activactions'=>$activs,
+            'sum'=>$sum,
+            'begin'=>$begin,
+            'end'=>$end
         ]);
     }
     /**

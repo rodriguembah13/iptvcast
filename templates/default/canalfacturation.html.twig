@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Facturation Canal+
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="row justify-content-between">
+                    <div class="col-md-8">
+                        <h4>Facturation Canal+</h4>
+                    </div>
+                </div>
+                <form method="post">
+                    <div class="row">
+                        <div class="mb-3 col-md-3">
+                            <label for="name" class="form-label">De</label>
+                            <input type="date" name="begin" value="{{ begin }}" class="form-control" id="at">
+                        </div>
+                        <div class="mb-3 col-md-3">
+                            <label for="name" class="form-label">A</label>
+                            <input type="date" name="end" class="form-control" value="{{ end }}" id="to">
+                        </div>
+                        <div class=" col-md-3 mt-3">
+                            <button class="btn btn-secondary" id="souscription_btn"><i class="mdi mdi-search-web"></i></button>
+                           {# <button class="btn btn-success" id="print_souscription"><i class="mdi mdi-file-excel"></i></button>#}
+                        </div>
+                        <div class=" col-md-3">
+                            <h4>Total (FCFA): {{ sum }}</h4>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+            <div class="card-body">
+                <div class="table-responsive"><table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Date</th>
+                            <th>N°Card</th>
+                            <th>Montant</th>
+                            <th>Bouquets</th>
+                            <th>Agent</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in activactions %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.createdAt|date("Y-m-d h:i") }}</td>
+                                <td>{{ item.card.numerocard }}</td>
+                                <td>{{ item.amount }}</td>
+                                <td>{{ item.bouquets|join(',')}}</td>
+                                <td>{% if item.createdBy is not null %}{{ item.createdBy.compte.name }}{% endif %}</td>
+                                <td>{{ item.status }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+
+        });
+        function deleteItem(id) {
+            $.ajax({
+                url: "{{ path('deleteagence_ajax') }}",
+                type: "GET",
+                dataType: "JSON",
+                data: {
+                    id:id,
+                },
+                success: function (data) {
+                    window.location.reload();
+                },
+                error: function (err) {
+                    alert("An error ocurred while loading data ...");
+                    setTimeout(function () {
+                        $("#overlay").fadeOut(300);
+                    }, 500);
+                }
+            });
+        }
+    </script>
+{% endblock %}
+
+

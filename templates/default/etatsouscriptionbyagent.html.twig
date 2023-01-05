@@ -20,17 +20,18 @@
                     </div>
                     <div class="mb-3 col-md-2">
                         <label for="name" class="form-label">De</label>
-                        <input type="date" name="name" class="form-control" id="at">
+                        <input type="date" name="name" value="{{ begin }}" class="form-control" id="at">
                     </div>
                     <div class="mb-3 col-md-2">
                         <label for="name" class="form-label">A</label>
-                        <input type="date" name="name" class="form-control" id="to">
+                        <input type="date" name="name" value="{{ end }}" class="form-control" id="to">
                     </div>
                     <div class=" col-md-2 mt-3">
                         <button class="btn btn-secondary" id="souscription_btn"><i class="mdi mdi-search-web"></i></button>
                         <button class="btn btn-success" id="print_souscription"><i class="mdi mdi-file-excel"></i></button>
                     </div>
                     <div class=" col-md-3">
+                        <h4>Agent: {% if agent is not null %}{{ agent.compte.name }}{% endif %}</h4>
                         <h4>Total (FCFA): {{ sum }}</h4>
                         <h5>Total Recharge (FCFA): {{ recharge }}</h5>
                     </div>

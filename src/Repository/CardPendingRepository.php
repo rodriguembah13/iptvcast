@@ -50,28 +50,22 @@ class CardPendingRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
             ;
     }
-//    /**
-//     * @return CardPending[] Returns an array of CardPending objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?CardPending
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * @return CardPending[] Returns an array of Activation objects
+     */
+    public function findByNumeroAndDate($card,$begin,$end): array
+    {
+        $qb = $this->createQueryBuilder('s');
+        $qb->select('s')
+            ->leftJoin("s","card");
+        $qb->andWhere($qb->expr()->in('s.bouquets',$card));
+        $qb->andWhere('s.expiredtime >= :begin')
+            ->andWhere('s.createdAt <= :end')
+            ->andWhere('s.status = :status')
+            ->setParameter('status',Activation::SUCCESS)
+            ->setParameter('begin',$begin )
+            ->setParameter('end', $end.' 23:59')
+            ->orderBy('s.id', 'DESC');
+        return $qb->getQuery()->getResult();
+    }
 }
