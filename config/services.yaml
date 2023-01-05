@@ -15,6 +15,7 @@ parameters:
     FLU_ENCRIPT: '%env(resolve:FLU_ENCRIPT)%'
     PAYMONNEY_KEY: '%env(resolve:PAYMONNEY_KEY)%'
     CANALNUMBERS: '%env(resolve:CANALNUMBERS)%'
+    CANALPRICE: '%env(resolve:CANALPRICE)%'
 
 services:
     # default configuration for services in *this* file

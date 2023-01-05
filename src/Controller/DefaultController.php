@@ -1585,7 +1585,7 @@ class DefaultController extends AbstractController
                     return false;
                 });
                 foreach ($arrs as $activation){
-                    $sum+=$activation->getAmount();
+                    $sum+=$this->getParameter("CANALPRICE");
                     array_push($activs,$activation);
                 }
                 //$activs[]=$arrs;
@@ -1598,7 +1598,8 @@ class DefaultController extends AbstractController
             'activactions'=>$activs,
             'sum'=>$sum,
             'begin'=>$begin,
-            'end'=>$end
+            'end'=>$end,
+            'pricecanal'=>$this->getParameter("CANALPRICE")
         ]);
     }
     /**
