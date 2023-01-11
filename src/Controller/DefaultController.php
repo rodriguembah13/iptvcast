@@ -25,6 +25,7 @@ use App\Repository\RechargeWalletRepository;
 use App\Repository\SouscriptionRepository;
 use App\Service\EndpointService;
 use App\Service\paiement\ClientPaymoo;
+use App\Service\paiement\OmService;
 use DateTime;
 use DateTimeZone;
 use Doctrine\ORM\QueryBuilder;
@@ -62,6 +63,7 @@ class DefaultController extends AbstractController
     private $walletrechargeRepository;
     private $cardRepository;
     private $passwordEncoder;
+    private $omService;
     private $logger;
 
     /**
@@ -80,7 +82,7 @@ class DefaultController extends AbstractController
      * @param ParameterBagInterface $parameterBag
      */
     public function __construct(ActivationRepository $activationRepository,CardRepository $cardRepository,RechargeWalletRepository $rechargeWalletRepository,
-                                CardCustomerRepository $cardCustomerRepository,
+                                CardCustomerRepository $cardCustomerRepository,OmService $omService,
                                 SouscriptionRepository $souscriptionRepository,
                                 CustomerRepository $customerRepository,PersonnelRepository $personnelRepository,
                                 LoggerInterface $logger, UserPasswordHasherInterface $passwordEncoder,
@@ -100,6 +102,7 @@ class DefaultController extends AbstractController
         $this->personnelRepository=$personnelRepository;
         $this->passwordEncoder = $passwordEncoder;
         $this->walletrechargeRepository=$rechargeWalletRepository;
+        $this->omService=$omService;
         $this->activationRepository=$activationRepository;
     }
 
@@ -1039,6 +1042,26 @@ class DefaultController extends AbstractController
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
                 }
+            }elseif ($request->get('method')=="om"){
+                $month=$request->get('periode');
+                $id = "OM_0".rand(100000, 900000)."_00".rand(10000, 90000);
+                $notify_url = $this->generateUrl('omnotifyurlajax', ['souscription' => $id]);
+                $notify_url = $this->params->get('DOMAINSITE') . $notify_url;
+                $dataOM = [
+                    'subscriberMsisdn' => $request->get('phone'),
+                    'amount' => "1",
+                    'description' => "Payement bouquet",
+                    'notifUrl' => $notify_url,
+                    'orderId'=>$id
+                ];
+                $response =$this->omService->pay($dataOM);
+                $this->logger->info(json_encode($response));
+                if ($response['data']['inittxnstatus']=="200"){
+                    //$this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts,$month);
+                    return $this->redirectToRoute('successpage');
+                }else{
+                    return $this->redirectToRoute('erropage');
+                }
             }else{
                 if (strtolower($request->get('method')) == 'mobil_money') {
                     $currency = "XAF";
@@ -1115,6 +1138,27 @@ class DefaultController extends AbstractController
                     $this->createActivateRecharge($cardcustomer, $reference, $request->get('amount'), $produts,$month);
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
+                }
+            }elseif ($request->get('method')=="om"){
+                $month=$request->get('periode');
+                $id = "OM_0".rand(100000, 900000)."_00".rand(10000, 90000);
+                $notify_url = $this->generateUrl('omnotifyurlajax', ['souscription' => $id]);
+                $notify_url = $this->params->get('DOMAINSITE') . $notify_url;
+                $dataOM = [
+                    'subscriberMsisdn' => $request->get('phone'),
+                   // 'amount' => $request->get('amount'),
+                    'amount' => "1",
+                    'description' => "Payement bouquet",
+                    'notifUrl' => $notify_url,
+                    'orderId'=>$id
+                ];
+                $response =$this->omService->pay($dataOM);
+                $this->logger->info(json_encode($response));
+                if ($response['data']['inittxnstatus']=="200"){
+                    //$this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts,$month);
+                    return $this->redirectToRoute('successpage');
+                }else{
+                    return $this->redirectToRoute('erropage');
                 }
             }else{
 
@@ -1200,7 +1244,26 @@ class DefaultController extends AbstractController
                     $entityManager->flush();
                     return $this->redirectToRoute('successpage');
                 }
-            }else{
+            }elseif ($request->get('method')=="om"){
+                $month=$request->get('periode');
+                $id = "OM_0".rand(100000, 900000)."_00".rand(10000, 90000);
+                $notify_url = $this->generateUrl('omnotifyurlajax', ['souscription' => $id]);
+                $notify_url = $this->params->get('DOMAINSITE') . $notify_url;
+                $dataOM = [
+                    'subscriberMsisdn' => $request->get('phone'),
+                    'amount' => "1",
+                    'description' => "Payement bouquet",
+                    'notifUrl' => $notify_url,
+                    'orderId'=>$id
+                ];
+                $response =$this->omService->pay($dataOM);
+                if ($response['data']['inittxnstatus']=="200"){
+                    //$this->createActivate($cardcustomer, $reference, $request->get('amount'), $produts,$month);
+                    return $this->redirectToRoute('successpage');
+                }else{
+                    return $this->redirectToRoute('erropage');
+                }
+            } else{
 
                 if (strtolower($request->get('method')) == 'mobil_money') {
                     $currency = "XAF";
