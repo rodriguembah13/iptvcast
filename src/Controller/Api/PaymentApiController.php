@@ -146,7 +146,7 @@ class PaymentApiController extends AbstractFOSRestController
         $notify_url = $this->generateUrl('omnotifyurlajax', ['souscription' => $id]);
         $notify_url = $this->params->get('DOMAINSITE') . $notify_url;
         $dataOM = [
-            'subscriberMsisdn' => $data['phone'],
+            'subscriberMsisdn' => strval($data['phone']),
             'amount' => strval($data['amount']),
             'description' => "Payement bouquet",
             'notifUrl' => $notify_url,
