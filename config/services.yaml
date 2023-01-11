@@ -16,6 +16,13 @@ parameters:
     PAYMONNEY_KEY: '%env(resolve:PAYMONNEY_KEY)%'
     CANALNUMBERS: '%env(resolve:CANALNUMBERS)%'
     CANALPRICE: '%env(resolve:CANALPRICE)%'
+    OM_URL: '%env(resolve:OM_URL)%'
+    OM_CONSUMER: '%env(resolve:OM_CONSUMER)%'
+    OM_SECRET: '%env(resolve:OM_SECRET)%'
+    OM_USERNAME: '%env(resolve:OM_USERNAME)%'
+    OM_PASSWORD: '%env(resolve:OM_PASSWORD)%'
+    DOMAINSITE: '%env(resolve:DOMAINSITE)%'
+
 
 services:
     # default configuration for services in *this* file

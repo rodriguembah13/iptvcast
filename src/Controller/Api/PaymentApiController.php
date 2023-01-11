@@ -20,6 +20,7 @@ use App\Repository\UserRepository;
 use App\Service\paiement\ClientPaymoo;
 use App\Service\paiement\EkolopayService;
 use App\Service\paiement\FlutterwaveService;
+use App\Service\paiement\OmService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -43,6 +44,7 @@ class PaymentApiController extends AbstractFOSRestController
     private $activationRepository;
     private $cardpendingRepository;
     private $personnelRepository;
+    private $omService;
 
     /**
      * PaymentApiController constructor.
@@ -56,7 +58,7 @@ class PaymentApiController extends AbstractFOSRestController
      * @param CustomerRepository $customerRepository
      * @param EntityManagerInterface $entityManager
      */
-    public function __construct(CardRepository $cardRepository,
+    public function __construct(CardRepository $cardRepository, OmService $omService,
                                 FlutterwaveService $flutterwaveService,
                                 UserRepository $userRepository, ParameterBagInterface $params,
                                 BouquetRepository $bouquetRepository, PersonnelRepository $personnelRepository,
@@ -76,6 +78,7 @@ class PaymentApiController extends AbstractFOSRestController
         $this->activationRepository = $activationRepository;
         $this->cardpendingRepository = $cardPendingRepository;
         $this->personnelRepository = $personnelRepository;
+        $this->omService = $omService;
         $this->params = $params;
     }
 
@@ -103,6 +106,67 @@ class PaymentApiController extends AbstractFOSRestController
         }
         $this->doctrine->flush();
         return new JsonResponse([], 200);
+    }
+    /**
+     * @Rest\Post("/v1/omcallbackajax", name="omnotifyurlajax")
+     * @param Request $request
+     * @return Response
+     */
+    public function notifyurlOM(Request $request): Response
+    {
+        $this->logger->error("notify call");
+        $res = json_decode($request->getContent(), true);
+        $reference = $res['payToken'];
+        $this->logger->error($reference);
+        $statusbool = $res['status'];
+        $activation = $this->activationRepository->findOneBy(['reference' => $reference, 'status' => Activation::PENDING]);
+        $cardpending = $this->cardpendingRepository->findOneBy(['activation' => $activation->getId()]);
+        if ($statusbool == "SUCCESSFULL") {
+            $activation->setStatus(Activation::SUCCESS);
+            $cardpending->setStatus(CardPending::SUCCESS);
+        }
+        $this->doctrine->flush();
+        return new JsonResponse([], 200);
+    }
+    /**
+     * @Rest\Post("/v1/activations_om", name="api_activations_om")
+     * @param Request $request
+     * @return Response
+     */
+    public function activatecardOM(Request $request): Response
+    {
+        $res = json_decode($request->getContent(), true);
+        $data = $res['data'];
+        $produts = $data['bouquets'];
+        $amount = $data['amount'];
+        $month = $data['month'];
+        $personnel = $this->personnelRepository->find($data['agent']);
+        $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
+        $id = "OM_0".rand(100000, 900000)."_00".rand(10000, 90000);
+        $notify_url = $this->generateUrl('omnotifyurlajax', ['souscription' => $id]);
+        $notify_url = $this->params->get('DOMAINSITE') . $notify_url;
+        $dataOM = [
+            'subscriberMsisdn' => $data['phone'],
+            'amount' => $data['amount'],
+            'description' => "Payement bouquet",
+            'notifUrl' => $notify_url,
+            'orderId'=>$id
+        ];
+        $response =$this->omService->pay($dataOM);
+        if ($response['data']['inittxnstatus']=="200"){
+            //$this->createActivate($cardcustomer, $response['data']['payToken'], $amount, $produts, $month, $personnel, Activation::PENDING);
+            $resp = [
+                'message' => $response['data']['payToken'],
+                'code' => 200
+            ];
+        }else{
+            $resp= [
+                'message' => $response,
+                'code' => 500
+            ];
+        }
+        $view = $this->view($resp, Response::HTTP_OK, []);
+        return $this->handleView($view);
     }
 
     /**
@@ -218,14 +282,13 @@ class PaymentApiController extends AbstractFOSRestController
         $actiavtion->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Douala')));
         $actiavtion->setCard($card->getCard());
         $actiavtion->setAmount($amount);
-        // $month = intdiv($amount, $card->getCard()->getAmount());
-        //$month = 1;
         $actiavtion->setMonthto($month);
         $actiavtion->setReference($reference);
         $actiavtion->setStatus($status);
         $actiavtion->setBouquets($produts);
         $actiavtion->setCreatedBy($personnel);
         $this->doctrine->persist($actiavtion);
+        $this->doctrine->flush();
         for ($i = 0; $i < sizeof($produts); $i++) {
             $cardpending = new CardPending();
             $cardpending->setCardid($card->getCard()->getNumerocard());
@@ -243,7 +306,6 @@ class PaymentApiController extends AbstractFOSRestController
             $this->logger->info($date_line->format("Y-m-d"));
             $this->doctrine->persist($cardpending);
         }
-
         $this->doctrine->flush();
     }
 
@@ -261,6 +323,7 @@ class PaymentApiController extends AbstractFOSRestController
         $actiavtion->setBouquets($produts);
         $actiavtion->setCreatedBy($personnel);
         $this->doctrine->persist($actiavtion);
+
         for ($i = 0; $i < sizeof($produts); $i++) {
             $cardpending = new CardPending();
             $cardpending->setCardid($card->getCard()->getNumerocard());
