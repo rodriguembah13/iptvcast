@@ -147,7 +147,7 @@ class PaymentApiController extends AbstractFOSRestController
         $notify_url = $this->params->get('DOMAINSITE') . $notify_url;
         $dataOM = [
             'subscriberMsisdn' => $data['phone'],
-            'amount' => "".$data['amount'],
+            'amount' => strval($data['amount']),
             'description' => "Payement bouquet",
             'notifUrl' => $notify_url,
             'orderId'=>$id
