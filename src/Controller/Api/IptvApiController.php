@@ -4,10 +4,12 @@
 namespace App\Controller\Api;
 
 
+use App\Entity\Activation;
 use App\Entity\Customer;
 use App\Repository\BouquetRepository;
 use App\Repository\CardPendingRepository;
 use App\Repository\CardRepository;
+use App\Repository\CardSettingRepository;
 use App\Repository\CustomerRepository;
 use App\Repository\ReclamationRepository;
 use App\Service\EndpointService;
@@ -28,6 +30,7 @@ class IptvApiController extends AbstractFOSRestController
     private $cardRepository;
     private $cardpendingRepository;
     private $reclamationRepository;
+    private $settingRepository;
     private $doctrine;
 
     /**
@@ -39,7 +42,8 @@ class IptvApiController extends AbstractFOSRestController
      * @param LoggerInterface $logger
      * @param EndpointService $endpointService
      */
-    public function __construct(ReclamationRepository $reclamationRepository,CardPendingRepository $cardPendingRepository, EntityManagerInterface $entityManager,
+    public function __construct(ReclamationRepository $reclamationRepository,CardSettingRepository $cardSettingRepository,
+                                CardPendingRepository $cardPendingRepository, EntityManagerInterface $entityManager,
                                 CardRepository $cardRepository, BouquetRepository $bouquetRepository, LoggerInterface $logger, EndpointService $endpointService)
     {
         $this->logger = $logger;
@@ -48,6 +52,7 @@ class IptvApiController extends AbstractFOSRestController
         $this->cardRepository = $cardRepository;
         $this->cardpendingRepository = $cardPendingRepository;
         $this->reclamationRepository=$reclamationRepository;
+        $this->settingRepository=$cardSettingRepository;
         $this->doctrine = $entityManager;
     }
 
@@ -201,6 +206,91 @@ class IptvApiController extends AbstractFOSRestController
             $pending->setStatus(true);
         } else {
             $pending->setStatus(false);
+        }
+        $this->doctrine->flush();
+        $view = $this->view([], Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
+     * @Rest\Get("/v1/settingrequest", name="api_settingrequest")
+     * @return Response
+     * @throws Exception
+     */
+    public function settingsRequet()
+    {
+        $data = $this->settingRepository->findOneByFirst();
+        if (is_null($data)){
+            $values=[
+                'res'=>400
+            ];
+        }else{
+            $les=new \DateTime('now',new \DateTimeZone('Africa/Douala'));
+            $date=$les->modify('12 year')->format('Y-m-d').'16:59:59';
+            $now=new \DateTime($date,new \DateTimeZone('Africa/Douala'));
+            switch ($data->getCommandvalue()){
+                case 8: //Activate Area Lock
+                    $values=[
+                        'res'=>200,
+                        'id' => $data->getId(),
+                        'card_id' => intval($data->getNumero()),
+                        'expired_timestamp'=>date_timestamp_get($now),
+                        'command'=>8
+                    ];
+                    break;
+                case 9: //Cancel Area Lock
+                    $values=[
+                        'res'=>200,
+                        'id' => $data->getId(),
+                        'card_id' => intval($data->getNumero()),
+                        'expired_timestamp'=>date_timestamp_get($now),
+                        'command'=>9
+                    ];
+                    break;
+                case 3: //
+                    $values=[
+                        'res'=>200,
+                        'id' => $data->getId(),
+                        'card_id' => intval($data->getNumero()),
+                        'expired_timestamp'=>date_timestamp_get($now),
+                        'command'=>3
+                    ];
+                    break;
+                case 11: //activate card
+                    $values=[
+                        'res'=>200,
+                        'id' => $data->getId(),
+                        'card_id' => intval($data->getNumero()),
+                        'expired_timestamp'=>date_timestamp_get($now),
+                        'card_status' => 1,
+                        'send_or_not' => 1,
+                        'command'=>11
+                    ];
+                    break;
+                default:
+                    $values=[
+                        'res'=>200,
+                    ];
+            }
+
+        }
+        $view = $this->view($values, Response::HTTP_OK, []);
+        return $this->handleView($view);
+    }
+    /**
+     * @Rest\Post("/v1/reponsesetting", name="api_reponsesetting")
+     * @param Request $request
+     * @return Response
+     */
+    public function settingResponse(Request $request)
+    {
+        $res = json_decode($request->getContent(), true);
+        $this->logger->info("----------setting ok---------------");
+        $pending = $this->settingRepository->find($res['id']);
+        if ($res['code'] == 0) {
+            $pending->setIssend(true);
+            $pending->setStatus(Activation::SUCCESS);
+        } else {
+            $pending->setStatus(Activation::ECHEC);
         }
         $this->doctrine->flush();
         $view = $this->view([], Response::HTTP_OK, []);

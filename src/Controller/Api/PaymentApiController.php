@@ -140,6 +140,7 @@ class PaymentApiController extends AbstractFOSRestController
         $produts = $data['bouquets'];
         $amount = $data['amount'];
         $month = $data['month'];
+        $this->logger->info($data['amount']);
         $personnel = $this->personnelRepository->find($data['agent']);
         $cardcustomer = $this->cardcustomerRepository->find($data['cardcustomer']);
         $id = "OM_0".rand(100000, 900000)."_00".rand(10000, 90000);
@@ -147,8 +148,7 @@ class PaymentApiController extends AbstractFOSRestController
         $notify_url = $this->params->get('DOMAINSITE') . $notify_url;
         $dataOM = [
             'subscriberMsisdn' => strval($data['phone']),
-            //'amount' => strval($data['amount']),
-            'amount' => "1",
+            'amount' => strval($data['amount']),
             'description' => "Payement bouquet",
             'notifUrl' => $notify_url,
             'orderId'=>$id
@@ -157,7 +157,7 @@ class PaymentApiController extends AbstractFOSRestController
         if ($response['data']['inittxnstatus']=="200"){
             //$this->createActivate($cardcustomer, $response['data']['payToken'], $amount, $produts, $month, $personnel, Activation::PENDING);
             $resp = [
-                'message' => $response['data']['payToken'],
+                'message' => $response,
                 'code' => 200
             ];
         }else{

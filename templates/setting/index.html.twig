@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Setting card
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <div class="row justify-content-between">
+                    <div class="col-md-8">
+                        <h4>Setting</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mt-3 mt-md-0 float-end">
+                            <a type="button" class="btn btn-success waves-effect waves-light" href="{{ path('app_add_setting') }}"><i class="mdi mdi-plus-circle me-1"></i> Add settings</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="agents" class="table-responsive">{{ 'loading'|trans({}, 'messages') }}</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#agents').initDataTables({{ datatable_settings(datatable) }});
+
+        });
+    </script>
+{% endblock %}

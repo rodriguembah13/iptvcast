@@ -21,7 +21,8 @@ class OmService
      */
     private $client;
     protected $params;
-    private $channelMsisdn = "691301143";
+    private $channelMsisdn;
+    private $pin;
 
     /**
      * ClientApi constructor.
@@ -30,7 +31,6 @@ class OmService
     public function __construct(ParameterBagInterface $params)
     {
         $this->params = $params;
-        // Credentials: <Base64 value of UTF-8 encoded “username:password”>
         $this->client = new Client([
             'base_uri' => $params->get("OM_URL"),
             'headers' => [
@@ -40,6 +40,8 @@ class OmService
             'verify' => false,
             'http_errors' => false
         ]);
+        $this->channelMsisdn=$params->get("OM_CHANNEL");
+        $this->pin=$params->get("OM_PIN");
         $this->auth_header = base64_encode($this->params->get('OM_USERNAME') . ":" . $this->params->get('OM_PASSWORD'));
     }
 
@@ -138,7 +140,7 @@ class OmService
             "channelUserMsisdn" => $this->channelMsisdn,
             "amount"=>$data['amount'],
             "subscriberMsisdn"=>$data['subscriberMsisdn'],
-            "pin" => "2222",
+            "pin" => $this->pin,
             "orderId" => $data['orderId'],
             "description"=>"test",
             'payToken' => $this->getPayToken(),

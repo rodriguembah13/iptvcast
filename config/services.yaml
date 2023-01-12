@@ -22,6 +22,8 @@ parameters:
     OM_USERNAME: '%env(resolve:OM_USERNAME)%'
     OM_PASSWORD: '%env(resolve:OM_PASSWORD)%'
     DOMAINSITE: '%env(resolve:DOMAINSITE)%'
+    OM_CHANNEL: '%env(resolve:OM_CHANNEL)%'
+    OM_PIN: '%env(resolve:OM_PIN)%'
 
 
 services:
